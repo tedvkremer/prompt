@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Bash prompt with top-fixed status bar
+
+PROMPT_DIR="./bash_prompt.d"
+
+for f in "$PROMPT_DIR"/*.sh; do
+  [ -r "$f" ] && source "$f"
+done
+
+PROMPT_SEGMENTS='
+path|📁|2|green|bold|print_short_path
+git|⎇|1|yellow|git|print_git_branch
+user|👤|2|blue|bold|print_user
+host|🖥️|2|orange|bold|print_host
+time|🕐|2|gray|normal|print_time
+'
+
+terminal_init
+segments_init "$PROMPT_SEGMENTS"
+prompt_init
