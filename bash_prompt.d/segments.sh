@@ -13,12 +13,21 @@ segments_init() {
 
     # Parse the 4-column spec
     IFS='|' read -r name icon_spec renderer metadata <<< "$line"
+    if [[ -z "$name" || -z "$icon_spec" || -z "$renderer" || -z "$metadata" ]]; then
+      die "segments_init: invalid segment spec (expected 4 fields): $line"
+    fi
 
     # Process Icon Spec (glyph:width)
     glyph="${icon_spec%%:*}"
     width="${icon_spec#*:}"
     [[ "$icon_spec" != *:* ]] && width=1
     [[ -z "$width" ]] && width=1
+    if [[ -z "$glyph" ]]; then
+      die "segments_init: invalid icon spec (empty glyph) for segment '$name': $icon_spec"
+    fi
+    if ! [[ "$width" =~ ^[0-9]+$ ]] || (( width < 1 )); then
+      die "segments_init: invalid icon width for segment '$name': $width"
+    fi
 
     # Populate Virtual Namespace
     __segment_names+=("$name")

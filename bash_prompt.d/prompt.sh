@@ -5,6 +5,7 @@ prompt_init() {
   unset __prompt_color
   declare -g __prompt_color="$prompt_color"
 
+  die_init
   terminal_init
   status_bar_init $segments "${left}" "${center}" "${right}"
 
