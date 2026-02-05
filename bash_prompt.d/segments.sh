@@ -1,50 +1,49 @@
-# Segments DSL: name|glyph|width|color|style|value_fn
-#
-# - glyph: icon glyph
-# - width: column width of glyph
-# - color: color name resolved by color_print
-# - style: "bold" or "git" (special renderer)
-# - value_fn: stdout-returning value provider
-
-declare -A seg_glyph seg_width seg_color seg_style seg_value
-icon_glyphs=()
-icon_widths=()
 
 segments_init() {
-  local segment_defs="$1"
+  local -n segment_array="$1"
 
-  local line name glyph width color style value_fn
-  while IFS='|' read -r name glyph width color style value_fn; do
-    [[ -z $name ]] && continue
-    seg_glyph["$name"]="$glyph"
-    seg_width["$name"]="$width"
-    seg_color["$name"]="$color"
-    seg_style["$name"]="$style"
-    seg_value["$name"]="$value_fn"
-    icon_glyphs+=("$glyph")
-    icon_widths+=("$width")
-  done <<<"$segment_defs"
+  # Reset Global Registry
+  unset __segments __segment_names
+  declare -g -A __segments
+  declare -g -a __segment_names
+
+  local line name icon_spec renderer metadata glyph width
+  for line in "${segment_array[@]}"; do
+    [[ -z "$line" ]] && continue
+
+    # Parse the 4-column spec
+    IFS='|' read -r name icon_spec renderer metadata <<< "$line"
+
+    # Process Icon Spec (glyph:width)
+    glyph="${icon_spec%%:*}"
+    width="${icon_spec#*:}"
+    [[ "$icon_spec" != *:* ]] && width=1
+    [[ -z "$width" ]] && width=1
+
+    # Populate Virtual Namespace
+    __segment_names+=("$name")
+    __segments["$name/icon/glyph"]="$glyph"
+    __segments["$name/icon/width"]="$width"
+    __segments["$name/renderer"]="$renderer"
+    __segments["$name/metadata"]="$metadata"
+  done
 }
 
-print_short_path() {
-  local max_len=${PROMPT_PWD_MAXLEN:-50}
-  local pwd="${PWD/#$HOME/\~}"
+segments_render() { __segments_zip_engine "$1" "color"; }
+segments_plain()  { __segments_zip_engine "$1" "plain"; }
 
-  if (( ${#pwd} > max_len )); then
-    printf "...%s" "${pwd: -$max_len}"
-  else
-    printf "%s" "$pwd"
-  fi
-}
-
-print_icon_aligned() {
-  local s="$1" glyph width tmp count extra i
+segments_print_icon_aligned() {
+  local s="$1" name glyph width tmp count extra
   extra=0
-  for i in "${!icon_glyphs[@]}"; do
-    glyph="${icon_glyphs[i]}"
-    width="${icon_widths[i]}"
+
+  # Iterate through the registered names
+  for name in "${__segment_names[@]}"; do
+    glyph="${__segments["$name/icon/glyph"]}"
+    width="${__segments["$name/icon/width"]}"
+
     tmp="$s"
     count=0
+    # Count occurrences of this icon in the plain-text string
     while [[ "$tmp" == *"$glyph"* ]]; do
       tmp="${tmp#*"$glyph"}"
       count=$((count + 1))
@@ -54,91 +53,65 @@ print_icon_aligned() {
   printf "%s" "$extra"
 }
 
-print_time() { date +'%Y-%m-%d %H:%M:%S'; }
-print_user() { printf "%s" "${USER:-$(id -un 2>/dev/null)}"; }
-print_host() { printf " %s" "${HOSTNAME%%.*}"; }
+# Private helper for the A-Priori Zip-Merge
+# $1: segment_name, $2: output_mode (color|plain)
+__segments_zip_engine() {
+  local name="$1" mode="$2"
+  local renderer="${__segments["$name/renderer"]}"
+  local metadata="${__segments["$name/metadata"]}"
+  local glyph="${__segments["$name/icon/glyph"]}"
+  local width="${__segments["$name/icon/width"]}"
 
-print_git_branch() {
-  command -v git >/dev/null 2>&1 || return
-  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return
+  local padded_glyph
+  printf -v padded_glyph "%-*s" "$width" "$glyph"
 
-  local branch
-  branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-  if [[ -z $branch ]]; then
-    branch=$(git describe --tags --exact-match 2>/dev/null)
-  fi
-  if [[ -z $branch ]]; then
-    branch=$(git rev-parse --short HEAD 2>/dev/null)
-  fi
-  [[ -n $branch ]] || return
+  local raw_output
+  raw_output=$($renderer) || return
+  [[ -z "$raw_output" ]] && return
 
-  printf "%s" "$branch"
-}
-
-print_git_mark() {
-  local untracked
-  if ! git diff --quiet --ignore-submodules 2>/dev/null ||
-     ! git diff --cached --quiet --ignore-submodules 2>/dev/null; then
-    printf "✗"
+  # FAST PATH: 90% Simple Scalar
+  if [[ "$metadata" != *":"* ]]; then
+    local val="${padded_glyph}${raw_output}"
+    if [[ "$mode" == "color" ]]; then
+      local c_esc=""
+      IFS='+' read -ra mods <<< "$metadata"
+      for mod in "${mods[@]}"; do c_esc+="${__colors[$mod]}"; done
+      printf "%s" "${c_esc}${val}${__colors[reset]}"
+    else
+      printf "%s" "$val"
+    fi
     return
   fi
-  untracked=$(git ls-files --others --exclude-standard 2>/dev/null | head -n 1)
-  if [[ -n $untracked ]]; then
-    printf "✗"
-  else
-    printf "✓"
-  fi
-}
 
-segment_plain() {
-  local name="$1" glyph value_fn value
-  glyph="${seg_glyph[$name]}"
-  value_fn="${seg_value[$name]}"
-  if [[ ${seg_style[$name]} == git ]]; then
-    local branch mark
-    branch="$(print_git_branch)"
-    [[ -z $branch ]] && return
-    mark="$(print_git_mark)"
-    printf "(%s  %s %s)" "$glyph" "$branch" "$mark"
-    return
-  fi
-  value="$($value_fn)"
-  [[ -z $value ]] && return
-  printf "%s %s" "$glyph" "$value"
-}
+  # SLOW PATH: 10% Complex Vector (Git)
+  IFS=':' read -ra schema_parts <<< "$metadata"
+  IFS='|' read -r -a data_parts <<< "$raw_output"
 
-segment_render() {
-  local name="$1" glyph width color style value_fn value
-  glyph="${seg_glyph[$name]}"
-  width="${seg_width[$name]}"
-  color="${seg_color[$name]}"
-  style="${seg_style[$name]}"
-  value_fn="${seg_value[$name]}"
+  local i attr val output=""
+  for i in "${!schema_parts[@]}"; do
+    attr="${schema_parts[i]}"
+    val="${data_parts[i]}"
 
-  if [[ $style == git ]]; then
-    local branch mark mark_color
-    branch="$(print_git_branch)"
-    [[ -z $branch ]] && return
-
-    mark="$(print_git_mark)"
-    if [[ $mark == "✓" ]]; then
-      mark_color="$(color_print bright_green)"
-    else
-      mark_color="$(color_print red)"
+    if [[ "$val" == *","* ]]; then
+      local data_idx="${val#*,}"
+      val="${val%,*}"
+      if [[ "$attr" == *"?"* ]]; then
+        IFS='?' read -ra choices <<< "$attr"
+        attr="${choices[$data_idx]:-${choices[0]}}"
+      fi
+    elif [[ "$val" == "@" ]]; then
+      # THE FIX: Use the dynamic padded glyph here
+      val="${padded_glyph}"
     fi
-    printf "%b(%b%b%s%b  %b%s %b%s%b)%b" \
-      "$(color_print gray)" \
-      "$(color_print bold)" "$(color_print blue)" "$glyph" "$(color_print gray)" \
-      "$(color_print "$color")" "$branch" "$mark_color" "$mark" \
-      "$(color_print gray)" "$(color_print reset)"
-  else
-    value="$($value_fn)"
-    [[ -z $value ]] && return
 
-    if [[ $style == bold ]]; then
-      printf "%b%b%s %s%b" "$(color_print bold)" "$(color_print "$color")" "$glyph" "$value" "$(color_print reset)"
+    if [[ "$mode" == "color" ]]; then
+      local c_esc=""
+      IFS='+' read -ra mods <<< "$attr"
+      for mod in "${mods[@]}"; do c_esc+="${__colors[$mod]}"; done
+      output+="${c_esc}${val}${__colors[reset]}"
     else
-      printf "%b%s %s%b" "$(color_print "$color")" "$glyph" "$value" "$(color_print reset)"
+      output+="$val"
     fi
-  fi
+  done
+  printf "%s" "$output"
 }

@@ -7,14 +7,12 @@ for f in "$PROMPT_DIR"/*.sh; do
   [ -r "$f" ] && source "$f"
 done
 
-PROMPT_SEGMENTS='
-path|📁|2|green|bold|print_short_path
-git|⎇|1|yellow|git|print_git_branch
-user|👤|2|blue|bold|print_user
-host|🖥️|2|orange|bold|print_host
-time|🕐|2|gray|normal|print_time
-'
+SEGMENTS=(
+  "path|📁:2|render_path|green+bold"
+  "git|⎇:2|render_git|gray:blue+bold:purple:red?green:gray"
+  "user|👤:2|render_user|blue+bold"
+  "host|🖥️:2|render_host|orange+bold"
+  "time|🕐:2|render_time|gray"
+)
 
-terminal_init
-segments_init "$PROMPT_SEGMENTS"
-prompt_init
+prompt_init SEGMENTS "path git" "time" "user host" "orange"
