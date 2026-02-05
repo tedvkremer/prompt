@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Bash prompt with top-fixed status bar
 
 PROMPT_DIR="./bash_prompt.d"
 
@@ -8,11 +7,11 @@ for f in "$PROMPT_DIR"/*.sh; do
 done
 
 SEGMENTS=(
-  "path|📁:1|render_path|green+bold"
-  "git|⎇:2|render_git|gray:blue+bold:purple:green?red:gray"
-  "user|👤:1|render_user|blue+bold"
-  "host|🖥️:2|render_host|orange+bold"
-  "time|🕐:1|render_time|gray"
+  "path|📁|render_path|green"
+  "git|🌿|render_git|gray:none:purple:green?red:gray"
+  "user|👤|render_user|blue"
+  "host|🖥️:2|render_host|orange"
+  "time|🕐|render_time|gray"
 )
 
 prompt_init SEGMENTS "path git" "time" "user host" "orange"

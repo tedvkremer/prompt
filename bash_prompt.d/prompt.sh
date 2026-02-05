@@ -1,3 +1,9 @@
+# ---------------------------------------------------------------------------------------
+# Prompt setup and render loop.
+#
+# Public functions:
+# - prompt_init: Initialize prompt state, status bar, and key bindings.
+# ---------------------------------------------------------------------------------------
 
 prompt_init() {
   local segments=$1 left=$2 center=$3 right=$4 prompt_color=$5
@@ -7,6 +13,7 @@ prompt_init() {
 
   die_init
   terminal_init
+  color_init
   status_bar_init $segments "${left}" "${center}" "${right}"
 
   PROMPT_COMMAND="__prompt_command"

@@ -1,3 +1,12 @@
+# ---------------------------------------------------------------------------------------
+# Segment registry and rendering utilities.
+#
+# Public functions:
+# - segments_init: Parse segment specs and register renderers and metadata.
+# - segments_styled: Render a segment with styles.
+# - segments_raw: Render a segment without styles.
+# - segments_print_icon_aligned: Return extra column width for wide glyphs in a string.
+# ---------------------------------------------------------------------------------------
 
 segments_init() {
   local -n segment_array="$1"
@@ -39,8 +48,8 @@ segments_init() {
 
 }
 
-segments_render() { __segments_render "$1" "color"; }
-segments_plain()  { __segments_render "$1" "plain"; }
+segments_styled() { __segments_render "$1" "color"; }
+segments_raw()  { __segments_render "$1" "plain"; }
 
 segments_print_icon_aligned() {
   local s="$1" name glyph width tmp count extra
@@ -85,8 +94,8 @@ __segments_render() {
     if [[ "$mode" == "color" ]]; then
       local c_esc=""
       IFS='+' read -ra mods <<< "$metadata"
-      for mod in "${mods[@]}"; do c_esc+="${__colors[$mod]}"; done
-      printf "%s" "${c_esc}${val}${__colors[reset]}"
+      for mod in "${mods[@]}"; do c_esc+="${__color_map[$mod]}"; done
+      printf "%s" "${c_esc}${val}${__color_map[reset]}"
     else
       printf "%s" "$val"
     fi
@@ -117,8 +126,8 @@ __segments_render() {
     if [[ "$mode" == "color" ]]; then
       local c_esc=""
       IFS='+' read -ra mods <<< "$attr"
-      for mod in "${mods[@]}"; do c_esc+="${__colors[$mod]}"; done
-      output+="${c_esc}${val}${__colors[reset]}"
+      for mod in "${mods[@]}"; do c_esc+="${__color_map[$mod]}"; done
+      output+="${c_esc}${val}${__color_map[reset]}"
     else
       output+="$val"
     fi

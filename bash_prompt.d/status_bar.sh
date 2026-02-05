@@ -1,34 +1,40 @@
+# ---------------------------------------------------------------------------------------
+# Status bar layout and rendering.
+#
+# Public functions:
+# - status_bar_init: Initialize segment layout and register segments.
+# - status_bar_render: Build and draw the status bar.
+# ---------------------------------------------------------------------------------------
 
 status_bar_init() {
   local segments_ref=$1
 
-  declare -g __bar_left_names="$2"
-  declare -g __bar_center_names="$3"
-  declare -g __bar_right_names="$4"
+  unset __bar_left_names __bar_center_names __bar_right_names
+  declare -g __bar_left_names="$2" __bar_center_names="$3" __bar_right_names="$4"
 
   segments_init "$segments_ref"
 }
 
 __status_bar_build() {
-  __status_left="";   __status_left_plain=""
-  __status_center=""; __status_center_plain=""
-  __status_right="";  __status_right_plain=""
+  __status_left="";   __status_left_raw=""
+  __status_center=""; __status_center_raw=""
+  __status_right="";  __status_right_raw=""
 
   local name
 
   for name in $__bar_left_names; do
-    __status_left+="$(segments_render "$name") "
-    __status_left_plain+="$(segments_plain "$name") "
+    __status_left+="$(segments_styled "$name") "
+    __status_left_raw+="$(segments_raw "$name") "
   done
 
   for name in $__bar_center_names; do
-    __status_center+="$(segments_render "$name") "
-    __status_center_plain+="$(segments_plain "$name") "
+    __status_center+="$(segments_styled "$name") "
+    __status_center_raw+="$(segments_raw "$name") "
   done
 
   for name in $__bar_right_names; do
-    __status_right+="$(segments_render "$name") "
-    __status_right_plain+="$(segments_plain "$name") "
+    __status_right+="$(segments_styled "$name") "
+    __status_right_raw+="$(segments_raw "$name") "
   done
 }
 
@@ -42,12 +48,12 @@ __status_bar_draw() {
   printf " %s" "$__status_left"
 
   # 2. Calculate Lengths
-  extra="$(segments_print_icon_aligned "$__status_left_plain")"
-  left_len=$(( ${#__status_left_plain} + extra ))
-  extra="$(segments_print_icon_aligned "$__status_center_plain")"
-  center_len=$(( ${#__status_center_plain} + extra ))
-  extra="$(segments_print_icon_aligned "$__status_right_plain")"
-  right_len=$(( ${#__status_right_plain} + extra ))
+  extra="$(segments_print_icon_aligned "$__status_left_raw")"
+  left_len=$(( ${#__status_left_raw} + extra ))
+  extra="$(segments_print_icon_aligned "$__status_center_raw")"
+  center_len=$(( ${#__status_center_raw} + extra ))
+  extra="$(segments_print_icon_aligned "$__status_right_raw")"
+  right_len=$(( ${#__status_right_raw} + extra ))
 
   # 3. Calculate Columns
   center_col=$(( (cols - center_len) / 2 ))
