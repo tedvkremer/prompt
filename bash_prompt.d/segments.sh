@@ -27,10 +27,11 @@ segments_init() {
     __segments["$name/renderer"]="$renderer"
     __segments["$name/metadata"]="$metadata"
   done
+
 }
 
-segments_render() { __segments_zip_engine "$1" "color"; }
-segments_plain()  { __segments_zip_engine "$1" "plain"; }
+segments_render() { __segments_render "$1" "color"; }
+segments_plain()  { __segments_render "$1" "plain"; }
 
 segments_print_icon_aligned() {
   local s="$1" name glyph width tmp count extra
@@ -55,15 +56,15 @@ segments_print_icon_aligned() {
 
 # Private helper for the A-Priori Zip-Merge
 # $1: segment_name, $2: output_mode (color|plain)
-__segments_zip_engine() {
+__segments_render() {
   local name="$1" mode="$2"
   local renderer="${__segments["$name/renderer"]}"
   local metadata="${__segments["$name/metadata"]}"
   local glyph="${__segments["$name/icon/glyph"]}"
   local width="${__segments["$name/icon/width"]}"
 
-  local padded_glyph
-  printf -v padded_glyph "%-*s" "$width" "$glyph"
+  local padding=$(printf "%${width}s")
+  local padded_glyph="${glyph}${padding}"
 
   local raw_output
   raw_output=$($renderer) || return

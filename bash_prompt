@@ -8,11 +8,11 @@ for f in "$PROMPT_DIR"/*.sh; do
 done
 
 SEGMENTS=(
-  "path|📁:2|render_path|green+bold"
-  "git|⎇:2|render_git|gray:blue+bold:purple:red?green:gray"
-  "user|👤:2|render_user|blue+bold"
+  "path|📁:1|render_path|green+bold"
+  "git|⎇:2|render_git|gray:blue+bold:purple:green?red:gray"
+  "user|👤:1|render_user|blue+bold"
   "host|🖥️:2|render_host|orange+bold"
-  "time|🕐:2|render_time|gray"
+  "time|🕐:1|render_time|gray"
 )
 
 prompt_init SEGMENTS "path git" "time" "user host" "orange"

@@ -41,21 +41,19 @@ __status_bar_draw() {
   # 1. Draw Left
   printf " %s" "$__status_left"
 
-  # 2. Calculate Lengths using the new Registry-aware function
+  # 2. Calculate Lengths
   extra="$(segments_print_icon_aligned "$__status_left_plain")"
   left_len=$(( ${#__status_left_plain} + extra ))
-
   extra="$(segments_print_icon_aligned "$__status_center_plain")"
   center_len=$(( ${#__status_center_plain} + extra ))
-
   extra="$(segments_print_icon_aligned "$__status_right_plain")"
   right_len=$(( ${#__status_right_plain} + extra ))
 
-  # 3. Position Math
+  # 3. Calculate Columns
   center_col=$(( (cols - center_len) / 2 ))
   right_col=$(( cols - right_len ))
 
-  # Collision Handling
+  # 4. Collision Handling
   if (( center_len > 0 )) && (( center_col <= left_len )); then
     center_col=$((left_len + 1))
   fi
@@ -63,13 +61,13 @@ __status_bar_draw() {
     right_col=$((left_len + 1))
   fi
 
-  # 4. Draw Center
+  # 5. Draw Center
   if (( center_len > 0 )) && (( center_col < cols )); then
     terminal_to_col "$center_col"
     printf "%s" "$__status_center"
   fi
 
-  # 5. Draw Right
+  # 6. Draw Right
   if (( right_col < cols )); then
     terminal_to_col "$right_col"
     printf "%s " "$__status_right"
