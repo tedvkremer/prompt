@@ -3,7 +3,7 @@
 #
 # Public functions:
 # - terminal_init: Install a SIGWINCH handler to re-reserve the status-bar line on resize
-# - terminal_die: Print an error message and terminate the top-level shell via TERM.
+# - terminal_abort: Print an error message and terminate the top-level shell via TERM.
 # - terminal_clear: Clear the terminal screen.
 # - terminal_num_cols: Return the current terminal width in columns.
 # - terminal_to_col: Move the cursor to column N on the top row.
@@ -20,7 +20,7 @@ terminal_init() {
   trap 'terminal_reserve' SIGWINCH
 }
 
-terminal_die() {
+terminal_abort() {
   echo "Error: $1" >&2
   kill -s INT "$TOP_PID"
 }

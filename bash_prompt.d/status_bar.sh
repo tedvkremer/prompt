@@ -19,7 +19,7 @@ status_bar_init() {
     spec="${__regions_specs[$region]}"
     [[ -z "$spec" ]] && continue
     if [[ "$spec" == \|* || "$spec" == *\| || "$spec" == *'||'* ]]; then
-      terminal_die "status_bar_init: invalid region spec for '$region': $spec"
+      terminal_abort "status_bar_init: invalid region spec for '$region': $spec"
     fi
   done
 

@@ -7,7 +7,7 @@
 #   * simple metadata (no colons) expects a single renderer value.
 #   * complex metadata (with colons) expects a '|' delimited renderer vector
 #     aligned to the metadata schema, including '@' for icon placement.
-#   * returns "length<sep>styled" where sep is SEGMENTS_RENDER_SEP.
+#   * returns "length<record-sep>styled"
 # ---------------------------------------------------------------------------------------
 
 SEGMENTS_RENDER_SEP=$'\x1F'
@@ -25,7 +25,7 @@ segments_init() {
     # Validate 4-column DSL
     IFS='|' read -r name icon_spec renderer metadata <<< "$line"
     if [[ -z "$name" || -z "$icon_spec" || -z "$renderer" || -z "$metadata" ]]; then
-      terminal_die "segments_init: invalid segment spec (expected 4 fields): $line"
+      terminal_abort "segments_init: invalid segment spec (expected 4 fields): $line"
     fi
 
     # Validate icon (glyph:width)
@@ -34,10 +34,10 @@ segments_init() {
     [[ "$icon_spec" != *:* ]] && width=1
     [[ -z "$width" ]] && width=1
     if [[ -z "$glyph" ]]; then
-      terminal_die "segments_init: invalid icon spec (empty glyph) for segment '$name': $icon_spec"
+      terminal_abort "segments_init: invalid icon spec (empty glyph) for segment '$name': $icon_spec"
     fi
     if ! [[ "$width" =~ ^[0-9]+$ ]] || (( width < 1 )); then
-      terminal_die "segments_init: invalid icon width for segment '$name': $width"
+      terminal_abort "segments_init: invalid icon width for segment '$name': $width"
     fi
 
     # Populate segments registry
@@ -82,7 +82,7 @@ segments_render() {
     err_msg+="data_count=${#data_parts[@]}, "
     err_msg+="metadata='${metadata//$'\n'/ }', "
     err_msg+="raw_output='${raw_output//$'\n'/ }')"
-    terminal_die "$err_msg"
+    terminal_abort "$err_msg"
   fi
 
   local i attr val output="" length=0
@@ -98,7 +98,6 @@ segments_render() {
         attr="${choices[$data_idx]:-${choices[0]}}"
       fi
     elif [[ "$val" == "@" ]]; then
-      # THE FIX: Use the dynamic padded glyph here
       val="${padded_glyph}"
     fi
 
