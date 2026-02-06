@@ -1,6 +1,7 @@
 # ---------------------------------------------------------------------------------------
 # Status bar layout and rendering.
-#
+# Requires:
+# - terminal, segments
 # Public functions:
 # - status_bar_init: Initialize segment layout and register segments.
 # - status_bar_render: Build and draw the status bar.
@@ -9,57 +10,77 @@
 status_bar_init() {
   local segments_ref=$1
 
-  unset __bar_left_names __bar_center_names __bar_right_names
-  declare -g __bar_left_names="$2" __bar_center_names="$3" __bar_right_names="$4"
+  unset __regions_specs __regions_content
+  declare -g -A __regions_specs=([left]="$2" [center]="$3" [right]="$4")
+  declare -g -A __regions_content=()
+
+  local region spec
+  for region in left center right; do
+    spec="${__regions_specs[$region]}"
+    [[ -z "$spec" ]] && continue
+    if [[ "$spec" == \|* || "$spec" == *\| || "$spec" == *'||'* ]]; then
+      terminal_die "status_bar_init: invalid region spec for '$region': $spec"
+    fi
+  done
 
   segments_init "$segments_ref"
 }
 
 __status_bar_build() {
-  __status_left="";   __status_left_raw=""
-  __status_center=""; __status_center_raw=""
-  __status_right="";  __status_right_raw=""
-
-  local name
-
-  for name in $__bar_left_names; do
-    __status_left+="$(segments_styled "$name") "
-    __status_left_raw+="$(segments_raw "$name") "
-  done
-
-  for name in $__bar_center_names; do
-    __status_center+="$(segments_styled "$name") "
-    __status_center_raw+="$(segments_raw "$name") "
-  done
-
-  for name in $__bar_right_names; do
-    __status_right+="$(segments_styled "$name") "
-    __status_right_raw+="$(segments_raw "$name") "
+  local region
+  for region in left center right; do
+    local -a names=()
+    local name result
+    IFS='|' read -r -a names <<< "${__regions_specs[$region]}"
+    for name in "${names[@]}"; do
+      result="$(segments_render "$name")" || true
+      __regions_content["$region/$name"]="$result"
+    done
   done
 }
 
 __status_bar_draw() {
-  local cols left_len center_len right_len center_col right_col extra
+  local cols center_col right_col
+  local region name result seg_len seg_styled
+  local -A region_out region_len
+  local sep="$SEGMENTS_RENDER_SEP"
   cols=$(terminal_num_cols)
 
-  terminal_top_init
+  #
+  # Build: assemble region output strings and lengths from segment results
+  #
 
-  # 1. Draw Left
-  printf " %s" "$__status_left"
+  for region in left center right; do
+    region_out["$region"]=""
+    region_len["$region"]=0
+    local -a names=()
+    IFS='|' read -r -a names <<< "${__regions_specs[$region]}"
+    for name in "${names[@]}"; do
+      result="${__regions_content["$region/$name"]}"
+      if [[ -n "$result" ]]; then
+        seg_len="${result%%${sep}*}"
+        seg_styled="${result#*${sep}}"
+      else
+        seg_len=0
+        seg_styled=""
+      fi
+      region_out["$region"]+="${seg_styled} "
+      region_len["$region"]=$((region_len["$region"] + seg_len + 1))
+    done
+  done
 
-  # 2. Calculate Lengths
-  extra="$(segments_print_icon_aligned "$__status_left_raw")"
-  left_len=$(( ${#__status_left_raw} + extra ))
-  extra="$(segments_print_icon_aligned "$__status_center_raw")"
-  center_len=$(( ${#__status_center_raw} + extra ))
-  extra="$(segments_print_icon_aligned "$__status_right_raw")"
-  right_len=$(( ${#__status_right_raw} + extra ))
+  #
+  # Position: calculate regions positions based on their
+  #           lengths and the terminal width and adjust for overlap
+  #
 
-  # 3. Calculate Columns
+  local left_len="${region_len[left]}"
+  local center_len="${region_len[center]}"
+  local right_len="${region_len[right]}"
+
   center_col=$(( (cols - center_len) / 2 ))
   right_col=$(( cols - right_len ))
 
-  # 4. Collision Handling
   if (( center_len > 0 )) && (( center_col <= left_len )); then
     center_col=$((left_len + 1))
   fi
@@ -67,16 +88,26 @@ __status_bar_draw() {
     right_col=$((left_len + 1))
   fi
 
-  # 5. Draw Center
+  #
+  # Draw: render the status bar regions at their positions
+  #
+
+  local left_out="${region_out[left]}"
+  local center_out="${region_out[center]}"
+  local right_out="${region_out[right]}"
+
+  terminal_top_init
+
+  printf " %s" "$left_out"
+
   if (( center_len > 0 )) && (( center_col < cols )); then
     terminal_to_col "$center_col"
-    printf "%s" "$__status_center"
+    printf "%s" "$center_out"
   fi
 
-  # 6. Draw Right
   if (( right_col < cols )); then
     terminal_to_col "$right_col"
-    printf "%s " "$__status_right"
+    printf "%s " "$right_out"
   fi
 
   terminal_top_exit

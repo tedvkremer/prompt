@@ -13,15 +13,20 @@ render_time() { printf "%s" "$(date +'%a %b%e %I:%M%P')"; }
 render_user() { printf "%s" "${USER:-$(id -un 2>/dev/null)}"; }
 render_host() { printf "%s" "${HOSTNAME%%.*}"; }
 
+render_time_complex() {
+  # "date @ time"
+  printf "%s|@|%s" "$(date +'%a %b%e') " "$(date +'%I:%M%P')"
+}
+
 render_path() {
   local max_len=${PROMPT_PWD_MAXLEN:-50}
   local pwd="${PWD/#$HOME/\~}"
   if (( ${#pwd} > max_len )); then
-    printf "...%s" "${pwd: -$max_len}"
-  else
-    # @ [~/Projects/Code/prompt]
-    printf "@|[|%s|]" "$pwd"
+    pwd=$(printf "...%s" "${pwd: -$max_len}")
   fi
+
+  # @ [~/Projects/Code/prompt]
+  printf "@|[|%s|]" "$pwd"
 }
 
 render_git() {
@@ -37,15 +42,13 @@ render_git() {
   [[ -z "$branch" ]] && return
 
   # Status (good or dirty) (0|1 for green?red)
+  local mark="✓"
   local state_idx=0
   if [[ -n $(git status --porcelain --ignore-submodules 2>/dev/null | head -n 1) ]]; then
+    mark="✗"
     state_idx=1
   fi
 
-  # 4. Logic: Get Mark
-  local mark="✓"
-  [[ "$state_idx" -eq 1 ]] && mark="✗"
-
-  # 5. Output Vector mapping: "@ main [x]"
+  # "@ main [x]"
   printf "@|%s|[|%s|]" "$branch " "$mark,$state_idx"
 }

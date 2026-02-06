@@ -3,79 +3,53 @@
 #
 # Public functions:
 # - segments_init: Parse segment specs and register renderers and metadata.
-# - segments_styled: Render a segment with styles.
-# - segments_raw: Render a segment without styles.
-# - segments_print_icon_aligned: Return extra column width for wide glyphs in a string.
+# - segments_render: Render a segment using the spec/renderer contract:
+#   * simple metadata (no colons) expects a single renderer value.
+#   * complex metadata (with colons) expects a '|' delimited renderer vector
+#     aligned to the metadata schema, including '@' for icon placement.
+#   * returns "length<sep>styled" where sep is SEGMENTS_RENDER_SEP.
 # ---------------------------------------------------------------------------------------
+
+SEGMENTS_RENDER_SEP=$'\x1F'
 
 segments_init() {
   local -n segment_array="$1"
 
-  # Reset Global Registry
-  unset __segments __segment_names
+  unset __segments
   declare -g -A __segments
-  declare -g -a __segment_names
 
   local line name icon_spec renderer metadata glyph width
   for line in "${segment_array[@]}"; do
     [[ -z "$line" ]] && continue
 
-    # Parse the 4-column spec
+    # Validate 4-column DSL
     IFS='|' read -r name icon_spec renderer metadata <<< "$line"
     if [[ -z "$name" || -z "$icon_spec" || -z "$renderer" || -z "$metadata" ]]; then
-      die "segments_init: invalid segment spec (expected 4 fields): $line"
+      terminal_die "segments_init: invalid segment spec (expected 4 fields): $line"
     fi
 
-    # Process Icon Spec (glyph:width)
+    # Validate icon (glyph:width)
     glyph="${icon_spec%%:*}"
     width="${icon_spec#*:}"
     [[ "$icon_spec" != *:* ]] && width=1
     [[ -z "$width" ]] && width=1
     if [[ -z "$glyph" ]]; then
-      die "segments_init: invalid icon spec (empty glyph) for segment '$name': $icon_spec"
+      terminal_die "segments_init: invalid icon spec (empty glyph) for segment '$name': $icon_spec"
     fi
     if ! [[ "$width" =~ ^[0-9]+$ ]] || (( width < 1 )); then
-      die "segments_init: invalid icon width for segment '$name': $width"
+      terminal_die "segments_init: invalid icon width for segment '$name': $width"
     fi
 
-    # Populate Virtual Namespace
-    __segment_names+=("$name")
+    # Populate segments registry
     __segments["$name/icon/glyph"]="$glyph"
     __segments["$name/icon/width"]="$width"
     __segments["$name/renderer"]="$renderer"
     __segments["$name/metadata"]="$metadata"
   done
-
 }
 
-segments_styled() { __segments_render "$1" "color"; }
-segments_raw()  { __segments_render "$1" "plain"; }
-
-segments_print_icon_aligned() {
-  local s="$1" name glyph width tmp count extra
-  extra=0
-
-  # Iterate through the registered names
-  for name in "${__segment_names[@]}"; do
-    glyph="${__segments["$name/icon/glyph"]}"
-    width="${__segments["$name/icon/width"]}"
-
-    tmp="$s"
-    count=0
-    # Count occurrences of this icon in the plain-text string
-    while [[ "$tmp" == *"$glyph"* ]]; do
-      tmp="${tmp#*"$glyph"}"
-      count=$((count + 1))
-    done
-    extra=$((extra + (width - 1) * count))
-  done
-  printf "%s" "$extra"
-}
-
-# Private helper for the A-Priori Zip-Merge
-# $1: segment_name, $2: output_mode (color|plain)
-__segments_render() {
-  local name="$1" mode="$2"
+segments_render() {
+  local name="$1"
   local renderer="${__segments["$name/renderer"]}"
   local metadata="${__segments["$name/metadata"]}"
   local glyph="${__segments["$name/icon/glyph"]}"
@@ -88,25 +62,30 @@ __segments_render() {
   raw_output=$($renderer) || return
   [[ -z "$raw_output" ]] && return
 
-  # FAST PATH: 90% Simple Scalar
+  # Simple atomic value
   if [[ "$metadata" != *":"* ]]; then
     local val="${padded_glyph}${raw_output}"
-    if [[ "$mode" == "color" ]]; then
-      local c_esc=""
-      IFS='+' read -ra mods <<< "$metadata"
-      for mod in "${mods[@]}"; do c_esc+="${__color_map[$mod]}"; done
-      printf "%s" "${c_esc}${val}${__color_map[reset]}"
-    else
-      printf "%s" "$val"
-    fi
+    local length=${#val}
+    local c_esc=""
+    IFS='+' read -ra mods <<< "$metadata"
+    for mod in "${mods[@]}"; do c_esc+="${__color_map[$mod]}"; done
+    printf "%s%s%s" "$length" "$SEGMENTS_RENDER_SEP" "${c_esc}${val}${__color_map[reset]}"
     return
   fi
 
-  # SLOW PATH: 10% Complex Vector (Git)
+  # Complex vector of values
   IFS=':' read -ra schema_parts <<< "$metadata"
-  IFS='|' read -r -a data_parts <<< "$raw_output"
+  IFS='|' read -ra data_parts <<< "$raw_output"
+  if [[ ${#schema_parts[@]} -ne ${#data_parts[@]} ]]; then
+    local err_msg="segments_render: schema/data length mismatch for segment '$name'"
+    err_msg+=" (schema_count=${#schema_parts[@]}, "
+    err_msg+="data_count=${#data_parts[@]}, "
+    err_msg+="metadata='${metadata//$'\n'/ }', "
+    err_msg+="raw_output='${raw_output//$'\n'/ }')"
+    terminal_die "$err_msg"
+  fi
 
-  local i attr val output=""
+  local i attr val output="" length=0
   for i in "${!schema_parts[@]}"; do
     attr="${schema_parts[i]}"
     val="${data_parts[i]}"
@@ -123,14 +102,12 @@ __segments_render() {
       val="${padded_glyph}"
     fi
 
-    if [[ "$mode" == "color" ]]; then
-      local c_esc=""
-      IFS='+' read -ra mods <<< "$attr"
-      for mod in "${mods[@]}"; do c_esc+="${__color_map[$mod]}"; done
-      output+="${c_esc}${val}${__color_map[reset]}"
-    else
-      output+="$val"
-    fi
+    length=$((length + ${#val}))
+    local c_esc=""
+    IFS='+' read -ra mods <<< "$attr"
+    for mod in "${mods[@]}"; do c_esc+="${__color_map[$mod]}"; done
+    output+="${c_esc}${val}${__color_map[reset]}"
   done
-  printf "%s" "$output"
+
+  printf "%s%s%s" "$length" "$SEGMENTS_RENDER_SEP" "$output"
 }

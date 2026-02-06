@@ -1,20 +1,20 @@
 # ---------------------------------------------------------------------------------------
 # Prompt setup and render loop.
-#
+# Requires:
+# - terminal, color, status_bar
 # Public functions:
 # - prompt_init: Initialize prompt state, status bar, and key bindings.
 # ---------------------------------------------------------------------------------------
 
 prompt_init() {
-  local segments=$1 left=$2 center=$3 right=$4 prompt_color=$5
+  local segments_ref=$1 left=$2 center=$3 right=$4 prompt_color=$5
 
   unset __prompt_color
   declare -g __prompt_color="$prompt_color"
 
-  die_init
   terminal_init
   color_init
-  status_bar_init $segments "${left}" "${center}" "${right}"
+  status_bar_init $segments_ref "${left}" "${center}" "${right}"
 
   PROMPT_COMMAND="__prompt_command"
   bind -x '"\C-l":__prompt_clear'

@@ -6,12 +6,16 @@ for f in "$PROMPT_DIR"/*.sh; do
   [ -r "$f" ] && source "$f"
 done
 
-SEGMENTS=(
+segments=(
   "path|📁|render_path|none:gray:yellow:gray"
   "git|🌿|render_git|none:green+bold:gray:bright_green?red:gray"
   "user|👤|render_user|blue"
   "host|🖥️|render_host|orange"
-  "time|🕐|render_time|white"
+  "time|🕐|render_time_complex|white:none:white"
 )
+left="path|git"
+center="time"
+right="user|host"
+prompt="orange"
 
-prompt_init SEGMENTS "path git" "time" "user host" "orange"
+prompt_init segments "$left" "$center" "$right" "$prompt"
