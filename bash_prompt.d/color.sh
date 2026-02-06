@@ -19,6 +19,7 @@ color_init() {
     [bright_green]=$'\e[38;5;46m'
     [red]=$'\e[38;5;196m'
     [gray]=$'\e[38;5;245m'
+    [white]=$'\e[38;5;255m'
     [purple]=$'\e[38;5;141m'
     [cyan]=$'\e[38;5;51m'
     [magenta]=$'\e[38;5;201m'
