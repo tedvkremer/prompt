@@ -34,7 +34,7 @@ terminal_top_exit() { tput rc; }
 
 terminal_reserve() {
   local lines=$(tput lines)
-  [[ lines > 3 ]] || return
+  (( lines > 3 )) || return
 
   tput sc
   tput csr 1 $((lines - 2))
