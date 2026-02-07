@@ -165,6 +165,8 @@ safe_install() {
 # --- Execution ---
 
 clear
+echo ""
+echo ""
 draw_header "\"TED'S PROMPT\" INSTALLER" "$C_ORANGE"
 
 log_row "Source" "$SRC_DIR"
