@@ -7,7 +7,7 @@
 # - render_user: Print the current user name.
 # - render_host: Print the short host name.
 # - render_path: Print the current working directory, truncated if needed.
-# COMPLEX
+# EXTENDED
 # - render_path_x: Print the current working directory, truncated if needed.
 # - render_time_x: Print the current timestamp.
 # - render_git_x: Print git branch and dirty state when inside a repo.

@@ -8,15 +8,14 @@ done
 
 segments=(
   "path|📁|render_path_x|none:gray:olive:gray"
-  #"path|📁|render_path|olive"
   "git|🌿|render_git_x|none:brown+bold:gray:lime?coral:gray"
   "user|👤|render_user|blue"
   "host|🖥️:2|render_host|purple"
   "time|🕐|render_time_x|turquoise:none:coral"
 )
 left="path|git"
-center=""
-right="time|user|host"
+center="time"
+right="user|host"
 prompt="orange"
 
 prompt_init segments "$left" "$center" "$right" "$prompt"
