@@ -2,6 +2,7 @@
 # Color palette and formatting helpers.
 #
 # Public functions:
+# - color_init: Initialize the color map.
 # - color_print: Return the ANSI escape sequence for a named color or reset if unknown.
 #                For high-performance cases, use __color_map data-structure
 # ---------------------------------------------------------------------------------------

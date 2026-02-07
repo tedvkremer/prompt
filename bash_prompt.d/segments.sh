@@ -1,6 +1,7 @@
 # ---------------------------------------------------------------------------------------
 # Segment registry and rendering utilities.
-#
+# Requires:
+# - renderers, terminal, color
 # Public functions:
 # - segments_init: Parse segment specs and register renderers and metadata.
 # - segments_render: Render a segment using the spec/renderer contract:
