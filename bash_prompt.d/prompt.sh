@@ -47,4 +47,5 @@ __prompt_clear() {
   terminal_reserve
   status_bar_render
   terminal_to_start
+  echo ""
 }
