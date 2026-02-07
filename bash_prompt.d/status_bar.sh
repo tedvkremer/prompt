@@ -102,7 +102,7 @@ __status_bar_draw() {
 
   terminal_top_init
 
-  printf " %s" "$left_out"
+  printf "%s" "$left_out"
 
   if (( center_len > 0 )) && (( center_col < cols )); then
     terminal_to_col "$center_col"
@@ -111,7 +111,7 @@ __status_bar_draw() {
 
   if (( right_col < cols )); then
     terminal_to_col "$right_col"
-    printf "%s " "$right_out"
+    printf "%s" "$right_out"
   fi
 
   terminal_top_exit
