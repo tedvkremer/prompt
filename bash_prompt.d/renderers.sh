@@ -2,11 +2,15 @@
 # Segment renderers for the status bar.
 #
 # Public functions:
+# SIMPLE
 # - render_time: Print the current timestamp.
 # - render_user: Print the current user name.
 # - render_host: Print the short host name.
 # - render_path: Print the current working directory, truncated if needed.
-# - render_git: Print git branch and dirty state when inside a repo.
+# COMPLEX
+# - render_path_x: Print the current working directory, truncated if needed.
+# - render_time_x: Print the current timestamp.
+# - render_git_x: Print git branch and dirty state when inside a repo.
 # ---------------------------------------------------------------------------------------
 
 render_time() { printf "%s" "$(date +'%a %b%e %I:%M%P')"; }
