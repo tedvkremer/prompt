@@ -33,14 +33,10 @@ terminal_top_init() { tput sc; tput cup 0 0; tput el; }
 terminal_top_exit() { tput rc; }
 
 terminal_reserve() {
-  local lines
-  lines=$(tput lines)
-
-  if (( lines < 2 )); then
-    return
-  fi
+  local lines=$(tput lines)
+  [[ lines > 3 ]] || return
 
   tput sc
-  tput csr 1 $((lines - 1))
+  tput csr 1 $((lines - 2))
   tput rc
 }

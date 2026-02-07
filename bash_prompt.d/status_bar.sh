@@ -40,19 +40,20 @@ __status_bar_build() {
 }
 
 __status_bar_draw() {
-  local cols center_col right_col
-  local region name result seg_len seg_styled
-  local -A region_out region_len
-  local sep="$SEGMENTS_RENDER_SEP"
-  cols=$(terminal_num_cols)
+  local center_col right_col
 
   #
   # Build: assemble region output strings and lengths from segment results
   #
 
+  local -A region_out region_len
+  local sep="$SEGMENTS_RENDER_SEP"
+
+  local region name result seg_len seg_styled
   for region in left center right; do
     region_out["$region"]=""
     region_len["$region"]=0
+
     local -a names=()
     IFS='|' read -r -a names <<< "${__regions_specs[$region]}"
     for name in "${names[@]}"; do
@@ -64,6 +65,7 @@ __status_bar_draw() {
         seg_len=0
         seg_styled=""
       fi
+
       region_out["$region"]+="${seg_styled} "
       region_len["$region"]=$((region_len["$region"] + seg_len + 1))
     done
@@ -74,16 +76,18 @@ __status_bar_draw() {
   #           lengths and the terminal width and adjust for overlap
   #
 
+  local cols=$(terminal_num_cols)
+
   local left_len="${region_len[left]}"
   local center_len="${region_len[center]}"
   local right_len="${region_len[right]}"
 
   center_col=$(( (cols - center_len) / 2 ))
-  right_col=$(( cols - right_len ))
-
   if (( center_len > 0 )) && (( center_col <= left_len )); then
     center_col=$((left_len + 1))
   fi
+
+  right_col=$(( cols - right_len ))
   if (( right_col <= left_len + 1 )); then
     right_col=$((left_len + 1))
   fi
