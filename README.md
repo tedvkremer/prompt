@@ -1,5 +1,7 @@
 # "TED'S PROMPT" - Simple, extensible & robust Bash-prompt
 
+[Screenshot of prompt & installer](screenshot.png)
+
 **High impact, low footprint.**
 
 This project provides a sophisticated, asynchronous-ready status bar and prompt for Bash, written entirely in pure Bash. It aims to be the sweet spot between minimal prompts (too few features) and heavyweights like Powerlevel10k (too much code/complexity).
