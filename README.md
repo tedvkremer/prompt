@@ -1,4 +1,4 @@
-# "TED'S PROMPT" - Simple, extensible & robust Bash-prompt
+# Simple, extensible & robust Bash-prompt
 
 [Screenshot of prompt & installer](screenshot.png)
 
@@ -28,7 +28,7 @@ This project favors:
 ./install.sh
 ```
 
-#### 1.1.2 Enable 
+#### 1.1.2 Enable
 
 Add to `~/.bashrc` or `~/.bash_profile`:
 
@@ -96,7 +96,7 @@ Segments are defined in the `segments` array using a pipe-delimited DSL:
 - **renderer_function**: The Bash function to call to get the content.
 - **color_config**: How to color the output.
 
-Segments are assigned regions via `left`, `center` and `right`. 
+Segments are assigned regions via `left`, `center` and `right`.
 
 ```bash
 left="path|git"
@@ -110,29 +110,7 @@ Prompt color is set with `prompt`.
 
 Following is a list of available colors. A color may have a bold assigned to it via `+bold`. The color `none` is used for segment parts that don't have color.
 
-| Color |
-| :---- |
-| `orange` |
-| `blue` |
-| `yellow` |
-| `green` |
-| `bright_green` |
-| `red` |
-| `gray` |
-| `white` |
-| `purple` |
-| `cyan` |
-| `magenta` |
-| `pink` |
-| `teal` |
-| `lime` |
-| `brown` |
-| `maroon` |
-| `navy` |
-| `olive` |
-| `indigo` |
-| `coral` |
-| `turquoise` |
+**Colors:** `orange`, `blue`, `yellow`, `green`, `bright_green`, `red`, `gray`, `white`, `purple`, `cyan`, `magenta`, `pink`, `teal`, `lime`, `brown`, `maroon`, `navy`, `olive`, `indigo`, `coral`, `turquoise`
 
 ### 1.4 Renderers
 
@@ -192,27 +170,7 @@ render_git_x() {
 
 ### 2.1 Architecture
 
-The system is decomposed into layers of modules, with sctrict areas of concern, driven by a declarative Domain Specific Language (DSL).
-
-Prompt takes a declarative configuration and using status_bar, segments+renderers & terminal+font constructs a PROMPT_COMMAND and PS1.
-
-**The lowest layer:**
-terminal.sh and color.sh are stand-alone with no dependencies.
-
-**The component layer:**
-status_bar.sh, segments.sh, renderes.sh construct the prompt command from a configuration DSL.
-
-**The controller layer:**
-prompt.sh using the other 2 layers creates the status_bar fixed to the top and the simple prompt input line.
-
-**Modules:**
-1.  _Configuration_ the prompt configuration using the DSL.
-2.  _Prompt_ the controller that orchestrates the layout and segments.
-3.  _Status Bar_ builds left, center and right regions.
-4.  _Segments_ renders segments and applies style from the DSL metadata.
-5.  _Renderers_ segment renderers produce the content.
-6.  _Terminal_ manages cursor and scroll region control.
-7.  _Color_ provides the palette and escape sequences.
+The system is decomposed into layers of modules, with strict areas of concern and dependencies, driven by a declarative Domain Specific Language (DSL).
 
 ```text
           prompt + dsl
@@ -221,6 +179,26 @@ status_bar + segments + renderers
 ----------------------------------
         terminal    color
 ```
+
+_Dependencies are a DAG, top to bottom only_
+
+**The lowest layer:**
+`terminal` and `color` are stand-alone with no dependencies.
+
+**The component layer:**
+`status_bar`, `segments`, `renderers` construct & render the prompt command from a configuration DSL.
+
+**The controller layer:**
+`prompt` using the other 2 layers and the DSL definition creates the `status_bar` fixed to the top of the terminal and simple prompt input line.
+
+**Modules:**
+
+1.  **prompt:** the controller that orchestrates the layout and segments.
+2.  **status_bar:** builds left, center and right regions.
+3.  **segments:** renders segments and applies style from the DSL metadata.
+4.  **renderers:** segment renderers produce the content.
+5.  **terminal:** manages cursor and scroll region control.
+6.  **color:** provides the palette and escape sequences.
 
 ### 2.2 Coding standard
 
@@ -232,21 +210,20 @@ The codebase employs a strict programming style to prevent namespace pollution a
 - **Public API:**
   - `segments_init`, `terminal_to_col`
   - Intended for use by consumers of the module.
-- **Private API:** 
+- **Private API:**
   - `__status_bar_draw`, `__color_map`
   - Internal implementation details; not to be called externally.
-- **Module State:** 
+- **Module State:**
   - `__module_var`
   - Internal module state hidden from consumers.
 
 ### 2.3 Module reference
 
-| Module        | Role                | Public API                                | Private Implementation                     |
-| :------------ | :------------------ | :---------------------------------------- | :----------------------------------------- |
-| `bash_prompt` | **Configuration**   | N/A                                       | Sources modules, defines config variables. |
-| `prompt`      | **Controller**      | `prompt_init`, `prompt_render`            | `__prompt_ps1`                             |
-| `status_bar`  | **Layout Engine**   | `status_bar_init`, `status_bar_render`    | `__status_bar_build`, `__status_bar_draw`  |
-| `segments`    | **Component Logic** | `segments_init`, `segments_render`        | `__segments` (registry map)                |
-| `renderers`   | **Data Providers**  | `render_*`                                | N/A                                        |
-| `terminal`    | **I/O & Cursor**    | `terminal_to_col`, `terminal_save_cursor` | N/A                                        |
-| `color`       | **Styling**         | `color_init`                              | `__color_map`                              |
+| Module       | Description                                               | Public API                                                                                                                                                                     |
+| :----------- | :-------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prompt`     | the controller that orchestrates the layout and segments. | `prompt_init`                                                                                                                                                                  |
+| `status_bar` | builds left, center and right regions.                    | `status_bar_init`, `status_bar_render`                                                                                                                                         |
+| `segments`   | renders segments and applies style from the DSL metadata. | `segments_init`, `segments_render`                                                                                                                                             |
+| `renderers`  | segment renderers produce the content.                    | `render_time`, `render_user`, `render_host`, `render_path`, `render_path_x`, `render_time_x`, `render_git_x`                                                                   |
+| `terminal`   | manages cursor and scroll region control.                 | `terminal_init`, `terminal_abort`, `terminal_clear`, `terminal_num_cols`, `terminal_to_col`, `terminal_to_start`, `terminal_top_init`, `terminal_top_exit`, `terminal_reserve` |
+| `color`      | provides the palette and escape sequences.                | `color_init`, `color_print`                                                                                                                                                    |
