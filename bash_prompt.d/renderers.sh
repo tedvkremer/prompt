@@ -13,7 +13,7 @@ render_time() { printf "%s" "$(date +'%a %b%e %I:%M%P')"; }
 render_user() { printf "%s" "${USER:-$(id -un 2>/dev/null)}"; }
 render_host() { printf "%s" "${HOSTNAME%%.*}"; }
 
-render_time_complex() {
+render_time_x() {
   # "date @ time"
   printf "%s|@|%s" "$(date +'%a %b%e') " "$(date +'%I:%M%P')"
 }
@@ -24,12 +24,16 @@ render_path() {
   if (( ${#pwd} > max_len )); then
     pwd=$(printf "...%s" "${pwd: -$max_len}")
   fi
+  printf "%s" "$pwd"
+}
 
+render_path_x() {
+  local pwd=$(render_path)
   # @ [~/Projects/Code/prompt]
   printf "@|[|%s|]" "$pwd"
 }
 
-render_git() {
+render_git_x() {
   # Validation
   command -v git >/dev/null 2>&1 || return
   git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return
