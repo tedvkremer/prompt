@@ -175,9 +175,15 @@ printf "${C_ORANGE}${V}%*s${V}${R}\n" $((WIDTH-2)) ""
 
 # 1. Validation
 log_step "Checking prerequisites"
+prereq_err=""
 if [[ ! -f "$SRC_DIR/bash_prompt" ]] || [[ ! -d "$SRC_DIR/bash_prompt.d" ]]; then
+  prereq_err="Missing source files in: $SRC_DIR"
+elif (( BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 3) )); then
+  prereq_err="Bash >= 4.3 required (found $BASH_VERSION)"
+fi
+if [[ -n "$prereq_err" ]]; then
   log_result 1
-  log_msg "Missing source files in: $SRC_DIR"
+  log_msg "$prereq_err"
   draw_footer "$C_ORANGE"
   exit 1
 fi
@@ -219,7 +225,9 @@ fi
 
 # 4. Config
 log_step "Configuring paths"
-sed -i 's|^PROMPT_DIR=.*|PROMPT_DIR="$HOME/.bash_prompt.d"|' "$TARGET_PROMPT"
+tmp="${TARGET_PROMPT}.tmp"
+sed 's|^PROMPT_DIR=.*|PROMPT_DIR="$HOME/.bash_prompt.d"|' "$TARGET_PROMPT" > "$tmp"
+mv "$tmp" "$TARGET_PROMPT"
 log_result 0
 
 draw_footer "$C_ORANGE"
