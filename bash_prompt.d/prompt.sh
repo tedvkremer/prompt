@@ -21,18 +21,10 @@ prompt_init() {
 }
 
 __prompt_build() {
-  local exit_code="${1:-0}" prompt_color
-
-  local color_good="$(color_print "$__prompt_color")"
-  local color_bad="$(color_print red)"
-
-  if (( exit_code == 0 )); then
-    prompt_color="\[${color_good}\]"
-  else
-    prompt_color="\[${color_bad}\]"
-  fi
-
-  PS1="\n${prompt_color}❯\[$(color_print reset)\] "
+  local exit_code="${1:-0}"
+  local color=$__prompt_color
+  (( exit_code == 1 )) && color=red
+  PS1="\n\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
 }
 
 __prompt_command() {
@@ -47,5 +39,4 @@ __prompt_clear() {
   terminal_reserve
   status_bar_render
   terminal_to_start
-  echo ""
 }
