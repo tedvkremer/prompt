@@ -23,7 +23,7 @@ prompt_init() {
 __prompt_build() {
   local exit_code="${1:-0}"
   local color=$__prompt_color
-  (( exit_code == 1 )) && color=red
+  (( exit_code != 0 )) && color=red;
   PS1="\n\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
 }
 
