@@ -37,6 +37,6 @@ terminal_reserve() {
   (( lines > 3 )) || return
 
   tput sc
-  tput csr 1 $((lines - 2))
+  tput csr 1 $((lines - 1))
   tput rc
 }
