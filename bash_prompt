@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
+# 1. Load the prompt library
 PROMPT_DIR="./bash_prompt.d"
-
 for f in "$PROMPT_DIR"/*.sh; do
   [ -r "$f" ] && source "$f"
 done
 
+# 2. Define segments, region assignments & prompt color
 segments=(
   "path|📁|render_path_x|none:gray:olive:gray"
   "git|🌿|render_git_x|none:brown+bold:gray:lime?coral:gray"
@@ -18,4 +19,5 @@ center="time"
 right="user|host"
 prompt="orange"
 
+# 3. Initialize the prompt
 prompt_init segments "$left" "$center" "$right" "$prompt"
