@@ -54,6 +54,7 @@ __status_bar_draw() {
     region_out["$region"]=""
     region_len["$region"]=0
 
+    local has_output=0
     local -a names=()
     IFS='|' read -r -a names <<< "${__regions_specs[$region]}"
     for name in "${names[@]}"; do
@@ -66,8 +67,16 @@ __status_bar_draw() {
         seg_styled=""
       fi
 
-      region_out["$region"]+="${seg_styled} "
-      region_len["$region"]=$((region_len["$region"] + seg_len + 1))
+      [[ -z "$seg_styled" ]] && continue
+
+      if (( has_output )); then
+        region_out["$region"]+=" "
+        region_len["$region"]=$((region_len["$region"] + 1))
+      fi
+
+      region_out["$region"]+="${seg_styled}"
+      region_len["$region"]=$((region_len["$region"] + seg_len))
+      has_output=1
     done
   done
 
