@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+segments=(
+  "path|📁|render_path|olive"
+  "time|🕐|render_time|turquoise"
+  "user|👤|render_user|blue"
+  "host|🖥️:2|render_host|purple"
+)
+
+left="path|user"
+center="time"
+right="host"
+prompt_color="green"

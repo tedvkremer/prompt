@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+segments=(
+  "path|📁|render_path|olive"
+  "pathx|📂|render_path_x|none:gray:olive:gray"
+  "gitx|🌿|render_git_x|none:brown+bold:gray:lime?coral:gray"
+  "time|⏰|render_time|turquoise"
+  "timex|🕐|render_time_x|turquoise:none:coral"
+  "user|👤|render_user|blue"
+  "host|🖥️:2|render_host|purple"
+)
+
+left="path|pathx|gitx"
+center="timex"
+right="time|user|host"
+prompt_color="coral"
