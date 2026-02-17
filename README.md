@@ -1,6 +1,18 @@
 # Simple, extensible & robust Bash-prompt
 
+**Prompt Concept, Design & Code**
+- by Ted V. Kremer 
+- w/ AI guidance for bash-script language and best-practice authority
+
+**Whole Product**
+- Guidance by Gemini CLI, Codex CLI & Claude Code
+- Installer bash-script by Gemini CLI
+- Validation bash-script by Codex CLI
+- README.md documentation by Claude Code
+
 [Screenshot of prompt & installer](screenshot.png)
+
+---
 
 **High impact, low footprint.**
 

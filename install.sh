@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Enhanced Installer by Gemini CLI
+# by Gemini CLI
 
 set -euo pipefail
 
