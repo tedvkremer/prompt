@@ -30,6 +30,8 @@ This project favors:
 2. A small, predictable DSL over long config files.
 3. A layered architecture that keeps rendering fast and hackable.
 
+---
+
 ## 1. USAGE:
 
 ### 1.1 Quick start
@@ -52,7 +54,7 @@ This installer script will:
 
 1. Backup your existing `.bash_prompt` prompt and the prompt library.
 2. Install the prompt and library to `~/.bash_prompt` and `~/.bash_prompt.d` respectively.
-3. Does not modify your `.bashrc` file. You must source the prompt in your `.bashrc` file.
+3. Does not modify your `.bashrc` file. You must source the prompt yourself.
 
 #### 1.1.3 Compatibility
 
@@ -100,13 +102,13 @@ prompt_init segments "$left" "$center" "$right" "$prompt"
 Segments are defined in the `segments` array using a pipe-delimited DSL:
 
 ```bash
-"name|icon_spec|renderer_function|color_config"
+"name|icon_spec|renderer_function|color_metadata"
 ```
 
 - **name**: Unique identifier for the segment (e.g., `git`, `path`).
 - **icon_spec**: The emoji/glyph to display, optionally with a width correction (e.g., `📁` or `🖥️:2`).
 - **renderer_function**: The Bash function to call to get the content.
-- **color_config**: How to color the output.
+- **color_metadata**: How to color the output.
 
 Segments are assigned regions via `left`, `center` and `right`.
 
