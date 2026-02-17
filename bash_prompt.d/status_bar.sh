@@ -44,8 +44,6 @@ __status_bar_build() {
 }
 
 __status_bar_draw() {
-  local pos_center pos_right
-
   #
   # Build: assemble region output strings and lengths from segment results
   #
@@ -120,12 +118,12 @@ __status_bar_draw() {
 
   printf "%s" "$region_left"
 
-  if (( length_center > 0 )) && (( pos_center < total_cols )); then
+  if (( length_center > 0 )) && (( pos_center + length_center < pos_right )); then
     terminal_to_col "$pos_center"
     printf "%s" "$region_center"
   fi
 
-  if (( pos_right < total_cols )); then
+  if (( length_right > 0 )) && (( pos_right + length_right <= total_cols )); then
     terminal_to_col "$pos_right"
     printf "%s" "$region_right"
   fi
