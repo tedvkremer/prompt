@@ -39,7 +39,7 @@ Add to `~/.bashrc` or `~/.bash_profile`:
 This installer script will:
 
 1. Backup your existing `.bash_prompt` prompt and the prompt library.
-2. Install the prompt and library to `.bash_prompt` and `~/.bash_prompt.d` respectively.
+2. Install the prompt and library to `~/.bash_prompt` and `~/.bash_prompt.d` respectively.
 3. Does not modify your `.bashrc` file. You must source the prompt in your `.bashrc` file.
 
 #### 1.1.3 Compatibility
@@ -132,7 +132,7 @@ Following is a list of available colors. A color may have a bold assigned to it 
 
 ```bash
 # Definition
-"user|👤|render_user|blue"
+"user|👤|render_user|green"
 
 # Function
 render_user() { echo "$USER"; }
@@ -153,14 +153,14 @@ render_user() { echo "$USER"; }
 
 ```bash
 # Definition
-"git|🌿|render_git_x|none:gray:lime?coral:gray"
+"git|🌿|render_git_x|none:purple|gray:lime?coral:gray"
 
 # Function
 render_git_x() {
   # ... logic ...
-  # Returns: "@| branch | [ | ✓,0 | ]"
-  # Schema:  ^    ^      ^    ^     ^
-  #          none gray  gray lime  gray
+  # Returns:" @  | branch | [ | ✓,0 | ]"
+  # Schema:   ^      ^      ^    ^    ^
+  # Colors: none   purple gray  lime gray
 }
 ```
 
@@ -173,16 +173,22 @@ render_git_x() {
 The system is decomposed into layers of modules, with strict areas of concern and dependencies, driven by a declarative Domain Specific Language (DSL).
 
 ```text
-          prompt + dsl
----------------------------------
-status_bar + segments + renderers
-----------------------------------
-        terminal    color
+
+                        +-----------------------------------+
+    controller          |               prompt              |
+                        +-----------------------------------+
+                        |             status_bar            |
+    components          |        + segments + renderers     |
+                        |      + domain specific language   |
+                        +-----------------------------------+
+    foundation          |        terminal  /  color         |
+                        +-----------------------------------+
+
 ```
 
 _Dependencies are a DAG, top to bottom only_
 
-**The lowest layer:**
+**The foundation layer:**
 `terminal` and `color` are stand-alone with no dependencies.
 
 **The component layer:**
@@ -211,7 +217,7 @@ The codebase employs a strict programming style to prevent namespace pollution a
   - `segments_init`, `terminal_to_col`
   - Intended for use by consumers of the module.
 - **Private API:**
-  - `__status_bar_draw`, `__color_map`
+  - `__status_bar_draw`
   - Internal implementation details; not to be called externally.
 - **Module State:**
   - `__module_var`
