@@ -17,7 +17,9 @@ status_bar_init() {
   local region spec
   for region in left center right; do
     spec="${__regions_specs[$region]}"
+
     [[ -z "$spec" ]] && continue
+
     if [[ "$spec" == \|* || "$spec" == *\| || "$spec" == *'||'* ]]; then
       terminal_abort "status_bar_init: invalid region spec for '$region': $spec"
     fi
@@ -31,7 +33,9 @@ __status_bar_build() {
   for region in left center right; do
     local -a names=()
     local name result
+
     IFS='|' read -r -a names <<< "${__regions_specs[$region]}"
+
     for name in "${names[@]}"; do
       result="$(segments_render "$name")" || true
       __regions_content["$region/$name"]="$result"
@@ -40,7 +44,7 @@ __status_bar_build() {
 }
 
 __status_bar_draw() {
-  local center_col right_col
+  local pos_center pos_right
 
   #
   # Build: assemble region output strings and lengths from segment results
@@ -49,78 +53,81 @@ __status_bar_draw() {
   local -A region_out region_len
   local sep="$SEGMENTS_RENDER_SEP"
 
-  local region name result seg_len seg_styled
+  local region name result segment_length segment_styled
   for region in left center right; do
     region_out["$region"]=""
     region_len["$region"]=0
 
-    local has_output=0
     local -a names=()
     IFS='|' read -r -a names <<< "${__regions_specs[$region]}"
+
+    local segments_tot=0
     for name in "${names[@]}"; do
       result="${__regions_content["$region/$name"]}"
+
       if [[ -n "$result" ]]; then
-        seg_len="${result%%${sep}*}"
-        seg_styled="${result#*${sep}}"
+        segment_length="${result%%${sep}*}"
+        segment_styled="${result#*${sep}}"
       else
-        seg_len=0
-        seg_styled=""
+        segment_length=0
+        segment_styled=""
       fi
 
-      [[ -z "$seg_styled" ]] && continue
+      (( segment_length == 0 )) && continue
 
-      if (( has_output )); then
+      if (( segments_tot > 0 )); then
         region_out["$region"]+=" "
-        region_len["$region"]=$((region_len["$region"] + 1))
+        region_len["$region"]=$(( region_len["$region"] + 1 ))
       fi
 
-      region_out["$region"]+="${seg_styled}"
-      region_len["$region"]=$((region_len["$region"] + seg_len))
-      has_output=1
+      region_out["$region"]+="${segment_styled}"
+      region_len["$region"]=$(( region_len["$region"] + segment_length ))
+
+      segments_tot=$(( segments_tot + 1 ))
     done
   done
+
+  local region_left="${region_out[left]}"
+  local region_center="${region_out[center]}"
+  local region_right="${region_out[right]}"
 
   #
   # Position: calculate regions positions based on their
   #           lengths and the terminal width and adjust for overlap
   #
 
-  local cols=$(terminal_num_cols)
+  local total_cols=$(terminal_num_cols)
 
-  local left_len="${region_len[left]}"
-  local center_len="${region_len[center]}"
-  local right_len="${region_len[right]}"
+  local length_left="${region_len[left]}"
+  local length_center="${region_len[center]}"
+  local length_right="${region_len[right]}"
 
-  center_col=$(( (cols - center_len) / 2 ))
-  if (( center_len > 0 )) && (( center_col <= left_len )); then
-    center_col=$((left_len + 1))
+  local pos_center=$(( (total_cols - length_center) / 2 ))
+  if (( length_center > 0 )) && (( pos_center <= length_left )); then
+    pos_center=$(( length_left + 1 ))
   fi
 
-  right_col=$(( cols - right_len ))
-  if (( right_col <= left_len + 1 )); then
-    right_col=$((left_len + 1))
+  local pos_right=$(( total_cols - length_right ))
+  if (( pos_right <= length_left + 1 )); then
+    pos_right=$(( length_left + 1 ))
   fi
 
   #
   # Draw: render the status bar regions at their positions
   #
 
-  local left_out="${region_out[left]}"
-  local center_out="${region_out[center]}"
-  local right_out="${region_out[right]}"
-
   terminal_top_init
 
-  printf "%s" "$left_out"
+  printf "%s" "$region_left"
 
-  if (( center_len > 0 )) && (( center_col < cols )); then
-    terminal_to_col "$center_col"
-    printf "%s" "$center_out"
+  if (( length_center > 0 )) && (( pos_center < total_cols )); then
+    terminal_to_col "$pos_center"
+    printf "%s" "$region_center"
   fi
 
-  if (( right_col < cols )); then
-    terminal_to_col "$right_col"
-    printf "%s" "$right_out"
+  if (( pos_right < total_cols )); then
+    terminal_to_col "$pos_right"
+    printf "%s" "$region_right"
   fi
 
   terminal_top_exit

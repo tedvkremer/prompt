@@ -2,7 +2,7 @@
 # Terminal utilities for positioning.
 #
 # Public functions:
-# - terminal_init: Install a SIGWINCH handler to re-reserve the status-bar line on resize
+# - terminal_init: Initialize terminal utilities.
 # - terminal_abort: Print an error message and terminate the top-level shell via TERM.
 # - terminal_clear: Clear the terminal screen.
 # - terminal_num_cols: Return the current terminal width in columns.
@@ -11,13 +11,12 @@
 # - terminal_top_init: Save cursor position, move to top-left, and clear the top line.
 # - terminal_top_exit: Restore the saved cursor position after drawing the top line.
 # - terminal_reserve: Reserve the top line for the status bar via the scrolling region.
+# - terminal_unreserve: Restore full-screen scrolling region.
 # ---------------------------------------------------------------------------------------
 
 terminal_init() {
   trap "exit 1" TERM
   export TOP_PID=$$
-
-  trap 'terminal_reserve' SIGWINCH
 }
 
 terminal_abort() {
@@ -29,14 +28,25 @@ terminal_clear() { tput clear; }
 terminal_num_cols() { tput cols; }
 terminal_to_col() { tput cup 0 $1; }
 terminal_to_start() { tput cup 1 0; }
-terminal_top_init() { tput sc; tput cup 0 0; tput el; }
 terminal_top_exit() { tput rc; }
+
+terminal_top_init() {
+  tput sc
+  tput cup 0 0
+  tput el
+}
 
 terminal_reserve() {
   local lines=$(tput lines)
-  (( lines > 3 )) || return
-
+  (( lines < 3 )) && return
   tput sc
   tput csr 1 $((lines - 1))
+  tput rc
+}
+
+terminal_unreserve() {
+  local lines=$(tput lines)
+  tput sc
+  tput csr 0 $((lines - 1))
   tput rc
 }

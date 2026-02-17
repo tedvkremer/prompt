@@ -13,11 +13,14 @@ prompt_init() {
   declare -g __prompt_color="$prompt_color"
 
   terminal_init
+  terminal_clear
   color_init
   status_bar_init $segments_ref "${left}" "${center}" "${right}"
 
   PROMPT_COMMAND="__prompt_command"
   bind -x '"\C-l":__prompt_clear'
+  trap '__prompt_before_command' DEBUG
+  trap '__prompt_render' SIGWINCH
 }
 
 __prompt_build() {
@@ -32,6 +35,16 @@ __prompt_command() {
   terminal_reserve
   status_bar_render
   __prompt_build "$exit_code"
+}
+
+__prompt_before_command() {
+  [[ "${BASH_COMMAND:-}" == __prompt_* ]] && return
+  terminal_unreserve
+}
+
+__prompt_render() {
+  terminal_reserve
+  status_bar_render
 }
 
 __prompt_clear() {
