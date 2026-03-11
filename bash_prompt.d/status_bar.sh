@@ -105,7 +105,7 @@ __status_bar_draw() {
     pos_center=$(( length_left + 1 ))
   fi
 
-  local pos_right=$(( total_cols - length_right ))
+  local pos_right=$(( total_cols - length_right - 1 ))
   if (( pos_right <= length_left + 1 )); then
     pos_right=$(( length_left + 1 ))
   fi
