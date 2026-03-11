@@ -19,7 +19,7 @@ render_host() { printf "%s" "${HOSTNAME%%.*}"; }
 
 render_time_x() {
   # "date @ time"
-  printf "%s|@|%s" "$(date +'%a %b%e') " "$(date +'%I:%M%P')"
+  printf "%s|@|%s" "$(date +'%a %b %e') " "$(date +'%I:%M%P')"
 }
 
 render_path() {
