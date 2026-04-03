@@ -26,9 +26,19 @@ prompt_init() {
 
 __prompt_build() {
   local exit_code="${1:-0}"
+
+  # TODO:
+  # Use a segments definition and renderer to produce prompt
+  #
+  # prompt="prompt|❯|render_prompt_a|orange?red"
+  # ❯ _
+  #
+  # prompt="prompt❯|render_prompt_b|orange?red:gray:none:gray"
+  # [path]❯ _
+
   local color=$__prompt_color
   (( exit_code != 0 )) && color=red;
-  PS1="\n[\W]\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
+  PS1="\n\[${__color_map[gray]}\][\[${__color_map[reset]}\]\W\[${__color_map[gray]}\]]\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
 }
 
 __prompt_command() {
@@ -53,4 +63,5 @@ __prompt_clear() {
   terminal_reserve
   status_bar_render
   terminal_to_start
+  echo
 }
