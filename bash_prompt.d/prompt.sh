@@ -16,6 +16,7 @@ prompt_init() {
   terminal_clear
   color_init
   status_bar_init $segments_ref "${left}" "${center}" "${right}"
+  echo
 
   PROMPT_COMMAND="__prompt_command"
   bind -x '"\C-l":__prompt_clear'
@@ -27,7 +28,7 @@ __prompt_build() {
   local exit_code="${1:-0}"
   local color=$__prompt_color
   (( exit_code != 0 )) && color=red;
-  PS1="\n\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
+  PS1="\n[\W]\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
 }
 
 __prompt_command() {
