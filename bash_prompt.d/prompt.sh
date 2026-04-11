@@ -1,7 +1,9 @@
 # ---------------------------------------------------------------------------------------
 # Prompt setup and render loop.
+#
 # Requires:
 # - terminal, color, status_bar
+#
 # Public functions:
 # - prompt_init: Initialize prompt state, status bar, and key bindings.
 # ---------------------------------------------------------------------------------------
@@ -33,7 +35,7 @@ __prompt_build() {
   # prompt="prompt|❯|render_prompt_a|orange?red"
   # ❯ _
   #
-  # prompt="prompt❯|render_prompt_b|orange?red:gray:none:gray"
+  # prompt="prompt|❯|render_prompt_b|orange?red:gray:none:gray"
   # [path]❯ _
 
   local color=$__prompt_color

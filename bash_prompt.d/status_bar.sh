@@ -1,7 +1,9 @@
 # ---------------------------------------------------------------------------------------
 # Status bar layout and rendering.
+#
 # Requires:
 # - terminal, segments
+#
 # Public functions:
 # - status_bar_init: Initialize segment layout and register segments.
 # - status_bar_render: Build and draw the status bar.
