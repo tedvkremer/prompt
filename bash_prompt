@@ -8,7 +8,7 @@ done
 
 # 2. Define segments, region assignments & prompt color
 segments=(
-  "path|📁|render_path_x|none:gray:olive:gray"
+  "path|📁|render_path|olive"
   "git|🌱|render_git_x|none:brown+bold:gray:lime?coral:gray"
   "user|👤|render_user|blue"
   "host|🖥️:2|render_host|purple"
