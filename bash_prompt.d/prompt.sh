@@ -30,7 +30,7 @@ __prompt_build() {
   local exit_code="${1:-0}"
 
   # TODO:
-  # Use a segments definition and renderer to produce prompt
+  # Use a segment definition and renderer to render PS1
   #
   # prompt="prompt|❯|render_prompt_a|orange?red"
   # ❯ _
@@ -41,7 +41,7 @@ __prompt_build() {
   local color=$__prompt_color
   (( exit_code != 0 )) && color=red;
   #PS1="\n\[${__color_map[gray]}\][\[${__color_map[reset]}\]\W\[${__color_map[gray]}\]]\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
-  PS1="\n\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
+  PS1="\n\W\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
 }
 
 __prompt_command() {
