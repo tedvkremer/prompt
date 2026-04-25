@@ -61,8 +61,8 @@ This installer script will:
 
 #### 1.1.3 Compatibility
 
-1. Bash 4.3+ is supported today.
-2. Zsh support is being ported. The bootstrap now selects a shell provider by environment, but `prompt_zsh.sh` has not shipped yet.
+1. Bash 4.3+ supported.
+2. Zsh 5.1+ supported.
 3. Requires standard CLI tools: `tput`, `date`, `git`, `id`.
 4. Icon widths are not universally knowable across fonts. Use `glyph:width` to tune for your setup.
 
@@ -78,9 +78,6 @@ This installer script will:
 The prompt is configured via the `teds_prompt` file. You define **segments** and place them into **regions**.
 
 ```bash
-# Works when sourced by bash today.
-# The bootstrap is being prepared to support zsh as well.
-
 # 1. Load the prompt library
 PROMPT_DIR="$HOME/.teds_prompt.d"
 prompt_modules=(
@@ -236,7 +233,7 @@ _Dependencies are a DAG, top to bottom only_
 `status_bar`, `segments`, `renderers` construct & render the prompt command from a configuration DSL.
 
 **The provider layer:**
-The shell provider implements the shell-specific hook registration and prompt formatting API consumed by `prompt`. `prompt_bash` is implemented today; `prompt_zsh` is the planned zsh counterpart.
+The shell provider implements the shell-specific hook registration and prompt formatting API consumed by `prompt`. `prompt_bash` serves bash; `prompt_zsh` serves zsh. The correct provider is selected automatically at source time.
 
 **The controller layer:**
 `prompt` uses the other layers and the DSL definition to create the `status_bar` fixed to the top of the terminal and a simple prompt input line.
@@ -274,7 +271,7 @@ The codebase employs a strict programming style to prevent namespace pollution a
 | :------------ | :-------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `prompt`      | the controller that orchestrates the layout and segments. | `prompt_init`                                                                                                                                                                  |
 | `prompt_bash` | the bash shell provider.                                  | `__prompt_register_hooks`, `__prompt_format_ps1`                                                                                                                               |
-| `prompt_zsh`  | the planned zsh shell provider.                           | `__prompt_register_hooks`, `__prompt_format_ps1`                                                                                                                               |
+| `prompt_zsh`  | the zsh shell provider.                                   | `__prompt_register_hooks`, `__prompt_format_ps1`                                                                                                                               |
 | `status_bar`  | builds left, center and right regions.                    | `status_bar_init`, `status_bar_render`                                                                                                                                         |
 | `segments`    | renders segments and applies style from the DSL metadata. | `segments_init`, `segments_render`                                                                                                                                             |
 | `renderers`   | segment renderers produce the content.                    | `render_time`, `render_user`, `render_host`, `render_path`, `render_path_x`, `render_time_x`, `render_git_x`                                                                   |
