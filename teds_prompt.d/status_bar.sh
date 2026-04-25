@@ -13,8 +13,12 @@ status_bar_init() {
   local segments_ref=$1
 
   unset __regions_specs __regions_content
-  typeset -gA __regions_specs=([left]="$2" [center]="$3" [right]="$4")
-  typeset -gA __regions_content=()
+  typeset -gA __regions_specs
+  typeset -gA __regions_content
+
+  __regions_specs[left]="$2"
+  __regions_specs[center]="$3"
+  __regions_specs[right]="$4"
 
   local region spec
   for region in left center right; do
@@ -33,14 +37,14 @@ status_bar_init() {
 __status_bar_build() {
   local region
   for region in left center right; do
-    local -a names=()
+    local spec="${__regions_specs[$region]}"
     local name result
 
-    IFS='|' read -r -a names <<< "${__regions_specs[$region]}"
-
-    for name in "${names[@]}"; do
+    while [[ -n "$spec" ]]; do
+      name="${spec%%|*}"
       result="$(segments_render "$name")" || true
       __regions_content["$region/$name"]="$result"
+      [[ "$spec" == *\|* ]] && spec="${spec#*|}" || spec=""
     done
   done
 }
@@ -50,19 +54,19 @@ __status_bar_draw() {
   # Build: assemble region output strings and lengths from segment results
   #
 
-  local -A region_out region_len
+  local -A region_out
+  local -A region_len
   local sep="$SEGMENTS_RENDER_SEP"
 
-  local region name result segment_length segment_styled
+  local region spec name result segment_length segment_styled
   for region in left center right; do
     region_out["$region"]=""
     region_len["$region"]=0
 
-    local -a names=()
-    IFS='|' read -r -a names <<< "${__regions_specs[$region]}"
-
+    spec="${__regions_specs[$region]}"
     local segments_tot=0
-    for name in "${names[@]}"; do
+    while [[ -n "$spec" ]]; do
+      name="${spec%%|*}"
       result="${__regions_content["$region/$name"]}"
 
       if [[ -n "$result" ]]; then
@@ -73,17 +77,18 @@ __status_bar_draw() {
         segment_styled=""
       fi
 
-      (( segment_length == 0 )) && continue
+      if (( segment_length > 0 )); then
+        if (( segments_tot > 0 )); then
+          region_out["$region"]+=" "
+          region_len["$region"]=$(( region_len["$region"] + 1 ))
+        fi
 
-      if (( segments_tot > 0 )); then
-        region_out["$region"]+=" "
-        region_len["$region"]=$(( region_len["$region"] + 1 ))
+        region_out["$region"]+="${segment_styled}"
+        region_len["$region"]=$(( region_len["$region"] + segment_length ))
+        segments_tot=$(( segments_tot + 1 ))
       fi
 
-      region_out["$region"]+="${segment_styled}"
-      region_len["$region"]=$(( region_len["$region"] + segment_length ))
-
-      segments_tot=$(( segments_tot + 1 ))
+      [[ "$spec" == *\|* ]] && spec="${spec#*|}" || spec=""
     done
   done
 

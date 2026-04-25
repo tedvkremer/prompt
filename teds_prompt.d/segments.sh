@@ -16,13 +16,16 @@
 SEGMENTS_RENDER_SEP=$'\x1F'
 
 segments_init() {
-  local -n segment_array="$1"
+  local segments_ref="$1"
+
+  # Portable way to copy array elements to positional parameters
+  eval "set -- \"\${$segments_ref[@]}\""
 
   unset __segments
   typeset -gA __segments
 
   local line name icon_spec renderer metadata glyph width
-  for line in "${segment_array[@]}"; do
+  for line in "$@"; do
     [[ -z "$line" ]] && continue
 
     # Validate 4-column DSL
@@ -70,46 +73,73 @@ segments_render() {
     local val="${padded_glyph}${raw_output}"
     local length=${#val}
     local c_esc=""
-    IFS='+' read -ra mods <<< "$metadata"
-    for mod in "${mods[@]}"; do c_esc+="${__color_map[$mod]}"; done
+    local mods_str="$metadata"
+    while [[ -n "$mods_str" ]]; do
+      local mod="${mods_str%%+*}"
+      c_esc+="${__color_map[$mod]}"
+      [[ "$mods_str" == *+* ]] && mods_str="${mods_str#*+}" || mods_str=""
+    done
     printf "%s%s%s" "$length" "$SEGMENTS_RENDER_SEP" "${c_esc}${val}${__color_map[reset]}"
     return
   fi
 
-  # Complex vector of values
-  IFS=':' read -ra schema_parts <<< "$metadata"
-  IFS='|' read -ra data_parts <<< "$raw_output"
-  if [[ ${#schema_parts[@]} -ne ${#data_parts[@]} ]]; then
+  # Complex vector of values (Shell-agnostic parsing via string manipulation)
+  local stripped="${metadata//:}"
+  local schema_count=$(( ${#metadata} - ${#stripped} + 1 ))
+  stripped="${raw_output//|}"
+  local data_count=$(( ${#raw_output} - ${#stripped} + 1 ))
+  if (( schema_count != data_count )); then
     local err_msg="segments_render: schema/data length mismatch for segment '$name'"
-    err_msg+=" (schema_count=${#schema_parts[@]}, "
-    err_msg+="data_count=${#data_parts[@]}, "
-    err_msg+="metadata='${metadata//$'\n'/ }', "
-    err_msg+="raw_output='${raw_output//$'\n'/ }')"
+    err_msg+=" (schema_count=${schema_count},"
+    err_msg+=" data_count=${data_count},"
+    err_msg+=" metadata='${metadata//$'\n'/ }',"
+    err_msg+=" raw_output='${raw_output//$'\n'/ }')"
     terminal_abort "$err_msg"
   fi
 
-  local i attr val output="" length=0
-  for i in "${!schema_parts[@]}"; do
-    attr="${schema_parts[i]}"
-    val="${data_parts[i]}"
+  local schema_str="$metadata"
+  local data_str="$raw_output"
+  local output=""
+  local total_length=0
 
+  while [[ -n "$schema_str" ]]; do
+    local attr="${schema_str%%:*}"
+    local val="${data_str%%|*}"
+
+    # Advance strings
+    [[ "$schema_str" == *:* ]] && schema_str="${schema_str#*:}" || schema_str=""
+    [[ "$data_str" == *\|* ]] && data_str="${data_str#*|}" || data_str=""
+
+    # Handle Magic (conditional coloring and icon placement)
     if [[ "$val" == *","* ]]; then
+      local data_val="${val%,*}"
       local data_idx="${val#*,}"
-      val="${val%,*}"
       if [[ "$attr" == *"?"* ]]; then
-        IFS='?' read -ra choices <<< "$attr"
-        attr="${choices[$data_idx]:-${choices[0]}}"
+        local choices="$attr"
+        local i=0
+        while (( i < data_idx )); do
+          choices="${choices#*[?]}"
+          ((i++))
+        done
+        attr="${choices%%[?]*}"
       fi
+      val="$data_val"
     elif [[ "$val" == "@" ]]; then
       val="${padded_glyph}"
     fi
 
-    length=$((length + ${#val}))
+    total_length=$((total_length + ${#val}))
+
+    # Apply colors
     local c_esc=""
-    IFS='+' read -ra mods <<< "$attr"
-    for mod in "${mods[@]}"; do c_esc+="${__color_map[$mod]}"; done
+    local mods_str="$attr"
+    while [[ -n "$mods_str" ]]; do
+      local mod="${mods_str%%+*}"
+      c_esc+="${__color_map[$mod]}"
+      [[ "$mods_str" == *+* ]] && mods_str="${mods_str#*+}" || mods_str=""
+    done
     output+="${c_esc}${val}${__color_map[reset]}"
   done
 
-  printf "%s%s%s" "$length" "$SEGMENTS_RENDER_SEP" "$output"
+  printf "%s%s%s" "$total_length" "$SEGMENTS_RENDER_SEP" "$output"
 }

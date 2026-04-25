@@ -15,7 +15,11 @@
 
 render_time() { printf "%s" "$(date +'%a %b%e %I:%M%P')"; }
 render_user() { printf "%s" "${USER:-$(id -un 2>/dev/null)}"; }
-render_host() { printf "%s" "${HOSTNAME%%.*}"; }
+render_host() {
+  local h="${HOSTNAME:-${HOST:-}}"
+  [[ -z "$h" ]] && h=$(hostname 2>/dev/null)
+  printf "%s" "${h%%.*}"
+}
 
 render_time_x() {
   # "date @ time"
@@ -24,9 +28,13 @@ render_time_x() {
 
 render_path() {
   local max_len=${PROMPT_PWD_MAXLEN:-50}
-  local pwd="${PWD/#$HOME/\~}"
+  local pwd="$PWD"
+  [[ "$pwd" == "$HOME"* ]] && pwd="~${pwd#$HOME}"
+
   if (( ${#pwd} > max_len )); then
-    pwd=$(printf "...%s" "${pwd: -$max_len}")
+    # Portable truncation using standard parameter expansion
+    local keep=$(( max_len - 3 ))
+    pwd="...${pwd: -$keep}"
   fi
   printf "%s" "$pwd"
 }
@@ -52,7 +60,8 @@ render_git_x() {
   # Status (good or dirty) (0|1 for green?red)
   local mark="✓"
   local state_idx=0
-  if [[ -n $(git status --porcelain --ignore-submodules 2>/dev/null | head -n 1) ]]; then
+  # Check for any changes (including untracked files)
+  if [[ -n $(git status --porcelain --ignore-submodules 2>/dev/null) ]]; then
     mark="✗"
     state_idx=1
   fi
