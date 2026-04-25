@@ -12,8 +12,6 @@
 
 [Screenshot of prompt & installer](screenshot.png)
 
----
-
 **High impact, low footprint.**
 
 This project provides a sophisticated, asynchronous-ready status bar and prompt for your shell. It aims to be the sweet spot between minimal prompts (too few features) and heavyweights like Powerlevel10k (too much code/complexity).
@@ -29,8 +27,6 @@ This project favors:
 1. Plain shell scripts over heavy frameworks.
 2. A small, predictable DSL over long config files.
 3. A layered architecture that keeps rendering fast and hackable.
-
----
 
 ## 1. USAGE:
 
@@ -202,8 +198,6 @@ render_git_x() {
 }
 ```
 
----
-
 ## 2. INTERNALS
 
 ### 2.1 Architecture
@@ -268,7 +262,7 @@ The codebase employs a strict programming style to prevent namespace pollution a
 ### 2.3 Module reference
 
 | Module        | Description                                               | Public API                                                                                                                                                                     |
-| :------------ | :-------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| :`---`--------- | :-------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `prompt`      | the controller that orchestrates the layout and segments. | `prompt_init`                                                                                                                                                                  |
 | `prompt_bash` | the bash shell provider.                                  | `__prompt_register_hooks`, `__prompt_format_ps1`                                                                                                                               |
 | `prompt_zsh`  | the zsh shell provider.                                   | `__prompt_register_hooks`, `__prompt_format_ps1`                                                                                                                               |
