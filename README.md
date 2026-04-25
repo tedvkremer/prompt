@@ -44,7 +44,10 @@ This project favors:
 
 #### 1.1.2 Enable
 
-Add to `~/.bashrc` or `~/.bash_profile`:
+Add to your shell startup file:
+
+- Bash: `~/.bashrc` or `~/.bash_profile`
+- Zsh: `~/.zshrc`
 
 ```bash
 [ -r "$HOME/.teds_prompt" ] && source "$HOME/.teds_prompt"
@@ -54,13 +57,14 @@ This installer script will:
 
 1. Backup your existing `.teds_prompt` prompt and the prompt library.
 2. Install the prompt and library to `~/.teds_prompt` and `~/.teds_prompt.d` respectively.
-3. Does not modify your `.bashrc` file. You must source the prompt yourself.
+3. Does not modify your shell startup file. You must source the prompt yourself.
 
 #### 1.1.3 Compatibility
 
-1. Bash 4.3+ required (uses associative arrays and `local -n`).
-2. Requires standard CLI tools: `tput`, `date`, `git`, `id`.
-3. Icon widths are not universally knowable across fonts. Use `glyph:width` to tune for your setup.
+1. Bash 4.3+ is supported today.
+2. Zsh support is being ported. The bootstrap now selects a shell provider by environment, but `prompt_zsh.sh` has not shipped yet.
+3. Requires standard CLI tools: `tput`, `date`, `git`, `id`.
+4. Icon widths are not universally knowable across fonts. Use `glyph:width` to tune for your setup.
 
 #### 1.1.4 Troubleshooting
 
@@ -74,12 +78,35 @@ This installer script will:
 The prompt is configured via the `teds_prompt` file. You define **segments** and place them into **regions**.
 
 ```bash
-#!/usr/bin/env bash
+# Works when sourced by bash today.
+# The bootstrap is being prepared to support zsh as well.
 
 # 1. Load the prompt library
 PROMPT_DIR="$HOME/.teds_prompt.d"
-for f in "$PROMPT_DIR"/*.sh; do
-  [ -r "$f" ] && source "$f"
+prompt_modules=(
+  "$PROMPT_DIR/terminal.sh"
+  "$PROMPT_DIR/color.sh"
+  "$PROMPT_DIR/renderers.sh"
+  "$PROMPT_DIR/segments.sh"
+  "$PROMPT_DIR/status_bar.sh"
+  "$PROMPT_DIR/prompt.sh"
+)
+
+if [ -n "${BASH_VERSION:-}" ]; then
+  prompt_modules+=("$PROMPT_DIR/prompt_bash.sh")
+elif [ -n "${ZSH_VERSION:-}" ]; then
+  prompt_modules+=("$PROMPT_DIR/prompt_zsh.sh")
+else
+  printf 'Error: unsupported shell\n' >&2
+  return 1 2>/dev/null || exit 1
+fi
+
+for f in "${prompt_modules[@]}"; do
+  [ -r "$f" ] || {
+    printf 'Error: required prompt module not readable: %s\n' "$f" >&2
+    return 1 2>/dev/null || exit 1
+  }
+  source "$f"
 done
 
 # 2. Define segments, region assignments & prompt color
@@ -187,21 +214,17 @@ render_git_x() {
 The system is decomposed into layers of modules, with strict areas of concern and dependencies, driven by a declarative Domain Specific Language (DSL).
 
 ```text
-
-                        +-----------------------------------+
-    controller          |               prompt              |
-                        +-----------------------------------+
-                        |            prompt_bash            |
-    provider            |        (shell-specific hooks,     |
-                        |         PS1 formatting)           |
-                        +-----------------------------------+
-                        |             status_bar            |
-    components          |        + segments + renderers     |
-                        |      + domain specific language   |
-                        +-----------------------------------+
-    foundation          |        terminal  /  color         |
-                        +-----------------------------------+
-
+                  ┌───────────────────────────────────┐
+    controller    │               prompt              │
+                  ├───────────────────────────────────┤
+    provider      │      prompt_bash │ prompt_zsh     │
+                  ├───────────────────────────────────┤
+                  │             status_bar            │
+    components    │        + segments + renderers     │
+                  │      + domain specific language   │
+                  ├───────────────────────────────────┤
+    foundation    │        terminal  +  color         │
+                  └───────────────────────────────────┘
 ```
 
 _Dependencies are a DAG, top to bottom only_
@@ -213,7 +236,7 @@ _Dependencies are a DAG, top to bottom only_
 `status_bar`, `segments`, `renderers` construct & render the prompt command from a configuration DSL.
 
 **The provider layer:**
-`prompt_bash` implements the shell-specific hook registration and PS1 formatting API consumed by `prompt`.
+The shell provider implements the shell-specific hook registration and prompt formatting API consumed by `prompt`. `prompt_bash` is implemented today; `prompt_zsh` is the planned zsh counterpart.
 
 **The controller layer:**
 `prompt` uses the other layers and the DSL definition to create the `status_bar` fixed to the top of the terminal and a simple prompt input line.
@@ -221,7 +244,7 @@ _Dependencies are a DAG, top to bottom only_
 **Modules:**
 
 1.  **prompt:** the controller that orchestrates the layout and segments.
-2.  **prompt_bash:** the bash shell provider (hook registration, PS1 formatting).
+2.  **prompt_bash / prompt_zsh:** shell providers (hook registration, prompt formatting).
 3.  **status_bar:** builds left, center and right regions.
 4.  **segments:** renders segments and applies style from the DSL metadata.
 5.  **renderers:** segment renderers produce the content.
@@ -251,6 +274,7 @@ The codebase employs a strict programming style to prevent namespace pollution a
 | :------------ | :-------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `prompt`      | the controller that orchestrates the layout and segments. | `prompt_init`                                                                                                                                                                  |
 | `prompt_bash` | the bash shell provider.                                  | `__prompt_register_hooks`, `__prompt_format_ps1`                                                                                                                               |
+| `prompt_zsh`  | the planned zsh shell provider.                           | `__prompt_register_hooks`, `__prompt_format_ps1`                                                                                                                               |
 | `status_bar`  | builds left, center and right regions.                    | `status_bar_init`, `status_bar_render`                                                                                                                                         |
 | `segments`    | renders segments and applies style from the DSL metadata. | `segments_init`, `segments_render`                                                                                                                                             |
 | `renderers`   | segment renderers produce the content.                    | `render_time`, `render_user`, `render_host`, `render_path`, `render_path_x`, `render_time_x`, `render_git_x`                                                                   |

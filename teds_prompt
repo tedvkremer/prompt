@@ -1,12 +1,42 @@
 #!/usr/bin/env bash
 
+#
 # 1. Load the prompt library
+#
+
 PROMPT_DIR="./teds_prompt.d"
-for f in "$PROMPT_DIR"/*.sh; do
-  [ -r "$f" ] && source "$f"
+prompt_modules=(
+  "$PROMPT_DIR/terminal.sh"
+  "$PROMPT_DIR/color.sh"
+  "$PROMPT_DIR/renderers.sh"
+  "$PROMPT_DIR/segments.sh"
+  "$PROMPT_DIR/status_bar.sh"
+  "$PROMPT_DIR/prompt.sh"
+)
+
+# Add provider for current shell
+if [ -n "${BASH_VERSION:-}" ]; then
+  prompt_modules+=("$PROMPT_DIR/prompt_bash.sh")
+elif [ -n "${ZSH_VERSION:-}" ]; then
+  prompt_modules+=("$PROMPT_DIR/prompt_zsh.sh")
+else
+  printf 'Error: unsupported shell\n' >&2
+  return 1 2>/dev/null || exit 1
+fi
+
+# Install prompt library modules
+for f in "${prompt_modules[@]}"; do
+  [ -r "$f" ] || {
+    printf 'Error: required prompt module not readable: %s\n' "$f" >&2
+    return 1 2>/dev/null || exit 1
+  }
+  source "$f"
 done
 
+#
 # 2. Define segments, region assignments & prompt color
+#
+
 segments=(
   "path|📁|render_path|olive"
   "git|🌱|render_git_x|none:brown+bold:gray:lime?coral:gray"
@@ -19,5 +49,8 @@ center="time"
 right="user|host"
 prompt="orange"
 
+#
 # 3. Initialize the prompt
+#
+
 prompt_init segments "$left" "$center" "$right" "$prompt"
