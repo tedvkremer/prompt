@@ -28,6 +28,8 @@ This project favors:
 2. A small, predictable DSL over long config files.
 3. A layered architecture that keeps rendering fast and hackable.
 
+---
+
 ## 1. USAGE:
 
 ### 1.1 Quick start
