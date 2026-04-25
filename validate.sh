@@ -19,7 +19,7 @@ if (( ${#test_files[@]} == 0 )); then
 fi
 
 # 1) Syntax checks
-bash -n "$ROOT_DIR/bash_prompt" "$ROOT_DIR"/bash_prompt.d/*.sh "${test_files[@]}"
+bash -n "$ROOT_DIR/teds_prompt" "$ROOT_DIR"/teds_prompt.d/*.sh "${test_files[@]}"
 pass "syntax"
 
 # 2) Runtime smoke checks for each unit-test config
@@ -47,7 +47,7 @@ run_smoke() {
     declare -p segments >/dev/null 2>&1
     [[ "${#segments[@]}" -gt 0 ]]
 
-    for f in "$ROOT_DIR/bash_prompt.d"/*.sh; do
+    for f in "$ROOT_DIR/teds_prompt.d"/*.sh; do
       [ -r "$f" ] && source "$f"
     done
 

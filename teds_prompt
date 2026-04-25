@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # 1. Load the prompt library
-PROMPT_DIR="./bash_prompt.d"
+PROMPT_DIR="./teds_prompt.d"
 for f in "$PROMPT_DIR"/*.sh; do
   [ -r "$f" ] && source "$f"
 done

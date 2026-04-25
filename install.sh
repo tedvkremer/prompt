@@ -110,8 +110,8 @@ log_msg() {
 # --- Logic ---
 
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TARGET_PROMPT="$HOME/.bash_prompt"
-TARGET_DIR="$HOME/.bash_prompt.d"
+TARGET_PROMPT="$HOME/.teds_prompt"
+TARGET_DIR="$HOME/.teds_prompt.d"
 
 rotate_backups() {
   local path="$1"
@@ -176,7 +176,7 @@ printf "${C_ORANGE}${V}%*s${V}${R}\n" $((WIDTH-2)) ""
 # 1. Validation
 log_step "Checking prerequisites"
 prereq_err=""
-if [[ ! -f "$SRC_DIR/bash_prompt" ]] || [[ ! -d "$SRC_DIR/bash_prompt.d" ]]; then
+if [[ ! -f "$SRC_DIR/teds_prompt" ]] || [[ ! -d "$SRC_DIR/teds_prompt.d" ]]; then
   prereq_err="Missing source files in: $SRC_DIR"
 elif (( BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 3) )); then
   prereq_err="Bash >= 4.3 required (found $BASH_VERSION)"
@@ -192,12 +192,12 @@ log_result 0
 # 2. Install Main Script
 log_step "Installing main script"
 set +e
-safe_install "$SRC_DIR/bash_prompt" "$TARGET_PROMPT" "file"
+safe_install "$SRC_DIR/teds_prompt" "$TARGET_PROMPT" "file"
 RET=$?
 set -e
 if (( RET == 2 )); then
   log_result 1
-  log_msg "Failed to install bash_prompt"
+  log_msg "Failed to install teds_prompt"
   draw_footer "$C_ORANGE"
   exit 1
 fi
@@ -209,12 +209,12 @@ fi
 # 3. Install Directory
 log_step "Installing library files"
 set +e
-safe_install "$SRC_DIR/bash_prompt.d" "$TARGET_DIR" "dir"
+safe_install "$SRC_DIR/teds_prompt.d" "$TARGET_DIR" "dir"
 RET=$?
 set -e
 if (( RET == 2 )); then
   log_result 1
-  log_msg "Failed to install bash_prompt.d"
+  log_msg "Failed to install teds_prompt.d"
   draw_footer "$C_ORANGE"
   exit 1
 fi
@@ -226,14 +226,14 @@ fi
 # 4. Config
 log_step "Configuring paths"
 tmp="${TARGET_PROMPT}.tmp"
-sed 's|^PROMPT_DIR=.*|PROMPT_DIR="$HOME/.bash_prompt.d"|' "$TARGET_PROMPT" > "$tmp"
+sed 's|^PROMPT_DIR=.*|PROMPT_DIR="$HOME/.teds_prompt.d"|' "$TARGET_PROMPT" > "$tmp"
 mv "$tmp" "$TARGET_PROMPT"
 log_result 0
 
 draw_footer "$C_ORANGE"
 
 # Summary
-SOURCE_LINE='[ -r "$HOME/.bash_prompt" ] && source "$HOME/.bash_prompt"'
+SOURCE_LINE='[ -r "$HOME/.teds_prompt" ] && source "$HOME/.teds_prompt"'
 
 echo "  ${C_GREEN}${B}Success!${R} The prompt has been installed."
 echo ""
