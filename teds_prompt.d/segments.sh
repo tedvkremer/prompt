@@ -19,7 +19,7 @@ segments_init() {
   local -n segment_array="$1"
 
   unset __segments
-  declare -g -A __segments
+  typeset -gA __segments
 
   local line name icon_spec renderer metadata glyph width
   for line in "${segment_array[@]}"; do

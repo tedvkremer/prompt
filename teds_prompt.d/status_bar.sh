@@ -13,8 +13,8 @@ status_bar_init() {
   local segments_ref=$1
 
   unset __regions_specs __regions_content
-  declare -g -A __regions_specs=([left]="$2" [center]="$3" [right]="$4")
-  declare -g -A __regions_content=()
+  typeset -gA __regions_specs=([left]="$2" [center]="$3" [right]="$4")
+  typeset -gA __regions_content=()
 
   local region spec
   for region in left center right; do

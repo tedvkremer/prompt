@@ -9,7 +9,7 @@
 
 color_init() {
   unset __color_map
-  declare -g -A __color_map=(
+  typeset -gA __color_map=(
     [none]=''
     [reset]=$'\e[0m'
     [bold]=$'\e[1m'
