@@ -264,7 +264,7 @@ The codebase employs a strict programming style to prevent namespace pollution a
 ### 2.3 Module reference
 
 | Module        | Description                                               | Public API                                                                                                                                                                     |
-| :`---`--------- | :-------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| :------------ | :-------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `prompt`      | the controller that orchestrates the layout and segments. | `prompt_init`                                                                                                                                                                  |
 | `prompt_bash` | the bash shell provider.                                  | `__prompt_register_hooks`, `__prompt_format_ps1`                                                                                                                               |
 | `prompt_zsh`  | the zsh shell provider.                                   | `__prompt_register_hooks`, `__prompt_format_ps1`                                                                                                                               |
