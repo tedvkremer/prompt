@@ -35,10 +35,9 @@ status_bar_init() {
 }
 
 __status_bar_build() {
-  local region
+  local region spec name result
   for region in left center right; do
-    local spec="${__regions_specs[$region]}"
-    local name result
+    spec="${__regions_specs[$region]}"
 
     while [[ -n "$spec" ]]; do
       name="${spec%%|*}"
@@ -58,13 +57,13 @@ __status_bar_draw() {
   local -A region_len
   local sep="$SEGMENTS_RENDER_SEP"
 
-  local region spec name result segment_length segment_styled
+  local region spec name result segment_length segment_styled segments_tot
   for region in left center right; do
     region_out["$region"]=""
     region_len["$region"]=0
 
     spec="${__regions_specs[$region]}"
-    local segments_tot=0
+    segments_tot=0
     while [[ -n "$spec" ]]; do
       name="${spec%%|*}"
       result="${__regions_content["$region/$name"]}"

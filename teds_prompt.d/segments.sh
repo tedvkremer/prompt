@@ -18,14 +18,16 @@ SEGMENTS_RENDER_SEP=$'\x1F'
 segments_init() {
   local segments_ref="$1"
 
-  # Portable way to copy array elements to positional parameters
-  eval "set -- \"\${$segments_ref[@]}\""
+  # Copy array by reference — portable across bash and zsh.
+  # The eval "set -- ..." pattern collapses elements inside function scope in zsh.
+  local -a _segs
+  eval "_segs=(\"\${${segments_ref}[@]}\")"
 
   unset __segments
   typeset -gA __segments
 
   local line name icon_spec renderer metadata glyph width
-  for line in "$@"; do
+  for line in "${_segs[@]}"; do
     [[ -z "$line" ]] && continue
 
     # Validate 4-column DSL
