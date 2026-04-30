@@ -41,7 +41,7 @@ __prompt_build() {
   local color=$__prompt_color
   (( exit_code != 0 )) && color=red;
   #PS1="\n\[${__color_map[gray]}\][\[${__color_map[reset]}\]\W\[${__color_map[gray]}\]]\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
-  PS1="\n\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
+  PS1="\n\W\[${__color_map[$color]}\]❯\[${__color_map[reset]}\] "
 }
 
 __prompt_command() {
