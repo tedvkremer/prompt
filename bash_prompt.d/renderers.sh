@@ -25,6 +25,7 @@ render_time_x() {
 render_path() {
   local max_len=${PROMPT_PWD_MAXLEN:-50}
   local pwd="${PWD/#$HOME/\~}"
+  [[ "$pwd" == "~" ]] && pwd="$PWD"
   if (( ${#pwd} > max_len )); then
     pwd=$(printf "...%s" "${pwd: -$max_len}")
   fi
